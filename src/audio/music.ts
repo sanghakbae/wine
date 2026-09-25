@@ -77,9 +77,15 @@ export class Music {
   /** 사용자 제스처 안에서 불러야 소리가 난다 */
   unlock() {
     if (!this.on) return;
-    this.ensure();
-    this.ctx!.resume();
-    if (!this.started) this.start();
+    try {
+      this.ensure();
+      this.ctx!.resume().catch(() => null);
+      if (!this.started) this.start();
+    } catch {
+      // 이 브라우저에서는 소리를 낼 수 없다 (Web Audio 없음·막힘): 음악은 끈 채로 두고 화면은 그대로 쓴다
+      this.on = false;
+      this.onChange?.();
+    }
   }
 
   toggle() {

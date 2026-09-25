@@ -111,7 +111,8 @@ function similarity(a: Wine, b: Wine): number {
 
 function distractors(w: Wine, q: QType, level: Level, n: number): Option[] {
   const correct = valueOf(w, q);
-  const pool = WINES.filter((x) => x.id !== w.id);
+  // 생산자 보기는 생산자 이름이 있는 와인에서만 (없으면 producerOf 가 와인 이름을 돌려줘 티가 난다)
+  const pool = WINES.filter((x) => x.id !== w.id && (q !== "producer" || hasProducer(x)));
   const seen = new Set([correct]);
   const out: Option[] = [];
   const push = (label: string, sub?: string) => {

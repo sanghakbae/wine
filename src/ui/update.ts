@@ -17,3 +17,20 @@ export function watchUpdates(isIdle: () => boolean) {
 }
 
 export const updatePending = () => pending;
+
+/** 이번에 받은 언어별 와인 설명 파일을 오프라인 캐시에 넣어 둔다.
+ *  (미리 받는 목록에서 뺀 파일이라, 첫 방문엔 서비스 워커가 아직 페이지를 맡기 전에 받아 저절로 담기지 않는다) */
+export function cacheWineTexts() {
+  if (!("serviceWorker" in navigator) || !("caches" in window)) return;
+  navigator.serviceWorker.ready
+    .then(async () => {
+      const urls = performance
+        .getEntriesByType("resource")
+        .map((e) => e.name)
+        .filter((n) => /\/assets\/i18n-[\w-]+\.js$/.test(n));
+      if (!urls.length) return;
+      const cache = await caches.open("wine-texts");
+      await Promise.all(urls.map(async (u) => (await cache.match(u)) ?? cache.add(u)));
+    })
+    .catch(() => null);
+}

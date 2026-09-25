@@ -133,8 +133,14 @@ export class App {
     this.renderSound();
     // 셀러·랭킹 창이 화면을 덮고 있는 동안에는 뒤의 3D 를 그리지 않는다
     new MutationObserver(() => (this.stage.paused = !this.cellar.hidden)).observe(this.cellar, { attributes: true, attributeFilter: ["hidden"] });
-    new ResizeObserver(() => this.syncInsets()).observe(this.panel);
-    new ResizeObserver(() => this.syncInsets()).observe(this.hud);
+    new ResizeObserver(() => {
+      this.syncInsets();
+      this.placeLiveRank();
+    }).observe(this.panel);
+    new ResizeObserver(() => {
+      this.syncInsets();
+      this.placeLiveRank();
+    }).observe(this.hud);
     new ResizeObserver(() => this.syncInsets()).observe(this.hero);
     window.addEventListener("resize", () => {
       this.syncInsets();
@@ -171,17 +177,23 @@ export class App {
   }
 
   // ───────────────────────── 첫 화면 (랜딩)
-  /** 새 버전으로 새로고침해도 되는 때 (첫 화면·결과 화면) */
+  /** 로그인·계정 삭제 팝업이 열려 있는 동안 (이때 새로고침하면 팝업이 고아가 된다) */
+  private busy = false;
+
+  /** 새 버전으로 새로고침해도 되는 때: 첫 화면에 아무 창도 없이 있을 때.
+   *  결과 화면은 랭킹 등록이 끝나지 않았을 수 있어 빼고, 손님이 쌓은 기록은 메모리에만 있어
+   *  새로고침하면 사라지므로 그때는 다음 방문까지 새 버전을 미룬다 */
   get idle() {
-    return this.view === "landing" || this.view === "result";
+    if (!store.saving && (store.plays > 0 || store.foundCount > 0)) return false;
+    return this.view === "landing" && this.cellar.hidden && !this.busy;
   }
 
   private showTitle() {
-    if (updatePending()) return location.reload();
     this.view = "landing";
+    this.cellar.hidden = true;
+    if (updatePending() && this.idle) return location.reload();
     this.liveRank.hidden = true;
     this.hud.hidden = true;
-    this.cellar.hidden = true;
     this.hero.hidden = false;
     this.vignette.hidden = false;
     document.title = `${t("appName")} — Wine Quiz`;
@@ -223,26 +235,40 @@ export class App {
     const head = `<button class="lr-head" data-act="lr-toggle" aria-expanded="${!collapsed}"><span>🏆 ${levelName(m.level)} ${t("rank_btn")}</span><i>${collapsed ? "▸" : "▾"}</i></button>`;
     if (collapsed) {
       this.liveRank.innerHTML = head;
+    } else if (!this.liveTop) {
+      // 불러오는 중이거나 못 불러왔을 때는 순위를 짐작해 보여 주지 않는다 (빈 목록이면 늘 1위로 보이니까)
+      this.liveRank.innerHTML = `${head}<p class="lr-note">${this.liveTop === undefined ? "…" : t("rank_fail")}</p>`;
     } else {
       // 서버 상위 기록 사이에 내 현재 점수를 끼워 넣고 10위까지만 보여 준다
       const me = currentUser();
-      const others = (this.liveTop ?? []).filter((x) => !(me && x.uid === me.uid));
+      const others = this.liveTop.filter((x) => !(me && x.uid === me.uid));
       const myRank = others.filter((x) => x.score > this.score).length + 1;
       const rows = others.map((x) => ({ nick: x.nick, cc: x.cc, score: x.score, mine: false }));
       rows.splice(myRank - 1, 0, { nick: t("rank_me"), cc: myCountry(), score: this.score, mine: true });
       const top10 = rows.slice(0, 10);
-      const note = this.liveTop === undefined ? "…" : this.liveTop === null ? t("rank_fail") : "";
       this.liveRank.innerHTML = `${head}
         <ol>${top10
           .map(
             (r, i) =>
-              `<li class="${r.mine ? "mine" : ""}"><b>${i + 1}</b><i class="cc" title="${esc(countryLabel(r.cc))}">${esc(short3(countryLabel(r.cc)))}</i><span title="${esc(r.nick)}">${esc(short3(r.nick))}</span><em>${r.score.toLocaleString(lang())}</em></li>`,
+              `<li class="${r.mine ? "mine" : ""}"><b>${i + 1}</b><i class="cc" title="${esc(countryLabel(r.cc))}">${esc(short3(countryLabel(r.cc)))}</i><span>${esc(short3(r.nick))}</span><em>${r.score.toLocaleString(lang())}</em></li>`,
           )
           .join("")}</ol>
-        ${myRank > 10 ? `<p class="lr-me"><span>${t("rank_me")}</span><em>${this.score.toLocaleString(lang())}</em></p>` : ""}
-        ${note ? `<p class="lr-note">${note}</p>` : ""}`;
+        ${myRank > 10 ? `<p class="lr-me"><span>${t("rank_me")}</span><em>${this.score.toLocaleString(lang())}</em></p>` : ""}`;
     }
-    this.liveRank.style.top = `${Math.round(this.hud.getBoundingClientRect().bottom) + 6}px`;
+    this.placeLiveRank();
+  }
+
+  /** HUD 바로 아래에 붙인다 (화면을 돌리거나 크기를 바꿔 HUD 높이가 바뀌어도 따라간다) */
+  private placeLiveRank() {
+    if (this.liveRank.hidden) return;
+    const top = Math.round(this.hud.getBoundingClientRect().bottom) + 6;
+    this.liveRank.style.top = `${top}px`;
+    // 폰에서 답을 고른 뒤 패널이 길어지면 랭킹이 패널을 덮지 않게 높이를 줄이고, 자리가 없으면 숨긴다
+    const pr = this.panel.getBoundingClientRect();
+    const lr = this.liveRank.getBoundingClientRect();
+    const room = pr.left < lr.right && pr.right > lr.left ? pr.top - top - 6 : Infinity;
+    this.liveRank.style.maxHeight = room === Infinity ? "" : `${Math.max(0, Math.floor(room))}px`;
+    this.liveRank.style.visibility = room < 24 ? "hidden" : "";
   }
 
   /** 화면 위쪽에 잠깐 떴다 사라지는 안내 */
@@ -259,22 +285,57 @@ export class App {
 
   /** Google 로그인. 실패하면 이유에 맞춰 알려 준다 */
   private async login() {
+    this.busy = true;
     try {
       await signIn();
     } catch (e) {
       const reason = e instanceof LoginError ? e.reason : "other";
       alert(t(reason === "inapp" ? "login_inapp" : reason === "popup" ? "login_popup" : "login_fail"));
+    } finally {
+      this.busy = false;
     }
+  }
+
+  /** 계정 삭제 확인 창. 브라우저 confirm() 을 오래 보고 있으면 뒤이은 Google 팝업이 막히므로
+   *  화면 안에서 묻고, 확인 버튼을 누른 바로 그때 본인 확인 팝업을 연다 */
+  private confirmDelete() {
+    clearInterval(this.titleTimer);
+    this.cellar.hidden = false;
+    this.cellar.innerHTML = `
+      <div class="confirm" role="alertdialog" aria-modal="true" aria-labelledby="del-q">
+        <p id="del-q">${t("delete_confirm")}</p>
+        <div class="row"><button class="primary danger" data-act="yes">${t("delete_account")}</button><button data-act="close">${t("close")}</button></div>
+      </div>`;
+    this.cellar.onclick = (e) => {
+      const el = e.target as HTMLElement;
+      const act = el.closest<HTMLElement>("[data-act]")?.dataset.act;
+      if (act === "close" || el === this.cellar) return this.closeOverlay();
+      if (act === "yes") {
+        this.closeOverlay();
+        this.deleteAccountFlow();
+      }
+    };
+    this.cellar.querySelector<HTMLButtonElement>("[data-act=close]")?.focus();
   }
 
   /** 계정 삭제: 본인 확인 → 서버 기록 삭제 → 계정 삭제. 한 단계라도 실패하면 거기서 멈춘다 */
   private async deleteAccountFlow() {
-    if (!confirm(t("delete_confirm"))) return;
+    this.busy = true;
     try {
-      await reauthenticate(); // 클릭 직후 첫 비동기 작업이어야 팝업이 막히지 않는다
-    } catch {
-      return alert(t("delete_fail"));
+      await this.deleteAccountSteps();
+    } finally {
+      this.busy = false;
     }
+  }
+
+  private async deleteAccountSteps() {
+    let ok: boolean;
+    try {
+      ok = await reauthenticate(); // 클릭 직후 첫 비동기 작업이어야 팝업이 막히지 않는다
+    } catch (e) {
+      return alert(t(e instanceof LoginError && e.reason === "popup" ? "login_popup" : "delete_fail"));
+    }
+    if (!ok) return; // 팝업을 닫았다: 아무것도 지우지 않는다
     store.forget();
     try {
       await deleteMyData();
@@ -367,7 +428,7 @@ export class App {
           await store.flush();
           return signOut();
         case "delete":
-          return this.deleteAccountFlow();
+          return this.confirmDelete();
       }
     };
     this.syncInsets();
@@ -413,7 +474,8 @@ export class App {
 
   private renderHud() {
     const m = this.mode;
-    const title = m.kind === "wine" ? esc(wineName(m.wine)) : levelName(m.level);
+    // 와인별 퀴즈에서 와인 이름을 띄우면 이름 문제의 답이 된다
+    const title = m.kind === "wine" ? t("cel_title") : levelName(m.level);
     const pct = Math.round(((this.round - (this.answered ? 0 : 1)) / this.total) * 100);
     this.hud.innerHTML = `
       <button class="hud-quit" data-act="quit" aria-label="${t("quit")}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -478,9 +540,9 @@ export class App {
       store.addFound(q.wine.id);
     } else this.streak = 0;
     this.results.push({ q, correct, points });
-    this.renderLiveRank();
     track("answer", { qtype: q.qtype, correct, level: this.mode.level, wine: q.wine.id, hints: this.hintsUsed.length });
-    recordAnswer(q.wine.id, correct);
+    // 와인별 퀴즈는 같은 와인을 되풀이해 푸니 공개 정답률에 넣지 않는다
+    if (this.mode.kind === "game") recordAnswer(q.wine.id, correct);
     this.music.cue(correct ? "right" : "wrong");
 
     this.panel.querySelectorAll<HTMLButtonElement>(".opt").forEach((b, k) => {
@@ -504,6 +566,8 @@ export class App {
     this.fillRates();
     // 폰에서는 패널이 길어지므로 정답·해설이 보이게 내려 준다
     requestAnimationFrame(() => this.panel.scrollTo({ top: (after as HTMLElement).offsetTop - 8, behavior: "smooth" }));
+    // 부가 표시는 맨 마지막에: 여기서 문제가 생겨도 정답 표시와 다음 버튼은 이미 그려져 있다
+    this.renderLiveRank();
   }
 
   private detailCard(w: Wine, q?: Question) {
@@ -532,17 +596,18 @@ export class App {
   private isBest = false;
   /** 랭킹 등록 결과: null = 아직, 0 = 실패, n = 전체 순위 */
   private submitted: number | null = null;
-  private submitting = false;
+  /** 랭킹 등록 중인 판 번호 (판마다 따로: 앞 판 등록이 늦어져도 다음 판 등록을 막지 않는다) */
+  private submittingGame: number | null = null;
 
   private async autoSubmit() {
     const m = this.mode;
     const user = currentUser();
     if (!user || m.kind !== "game") return;
-    this.submitting = true;
     const game = this.gameNo;
+    this.submittingGame = game;
     const right = this.results.filter((r) => r.correct).length;
     const rank = await submitScore(m.level, user.name, myCountry(), this.score, right, this.results.length, lang());
-    this.submitting = false;
+    if (this.submittingGame === game) this.submittingGame = null;
     if (game !== this.gameNo) return;
     track("rank_submit", { level: m.level, score: this.score, ok: rank !== null });
     this.submitted = rank ?? 0;
@@ -619,7 +684,7 @@ export class App {
       else if (act === "home") this.showTitle();
     };
     // 로그인한 상태면 이번 판을 랭킹에 자동 등록한다 (Google 이름 + 접속 국가)
-    if (cloudEnabled && m.kind === "game" && user && this.submitted === null && !this.submitting) this.autoSubmit();
+    if (cloudEnabled && m.kind === "game" && user && this.submitted === null && this.submittingGame !== this.gameNo) this.autoSubmit();
     this.syncInsets();
   }
 
@@ -661,7 +726,7 @@ export class App {
       ol.innerHTML = list
         .map(
           (x, i) =>
-            `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="cc" title="${esc(countryLabel(x.cc))}">${esc(short3(countryLabel(x.cc)))}</span><span class="nk" title="${esc(x.nick)}">${esc(short3(x.nick))}</span><span class="cr">${x.correct}/${x.total}</span><em>${x.score.toLocaleString(lang())}</em></li>`,
+            `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="cc" title="${esc(countryLabel(x.cc))}">${esc(short3(countryLabel(x.cc)))}</span><span class="nk">${esc(short3(x.nick))}</span><span class="cr">${x.correct}/${x.total}</span><em>${x.score.toLocaleString(lang())}</em></li>`,
         )
         .join("");
   }
@@ -669,7 +734,9 @@ export class App {
   // ───────────────────────── 와인 셀러 (도감)
   private openCellar() {
     clearInterval(this.titleTimer);
-    const countries = [...new Set(WINES.map((w) => w.country))];
+    // 셀러에는 퀴즈에서 맞힌 와인만 모인다 (못 맞힌 와인은 목록·검색·나라 거르기 어디에도 나오지 않는다)
+    const mine = WINES.filter((w) => store.isFound(w.id));
+    const countries = [...new Set(mine.map((w) => w.country))];
     track("cellar_open", { found: store.foundCount });
     this.cellar.hidden = false;
     this.cellar.innerHTML = `
@@ -683,21 +750,17 @@ export class App {
         <select aria-label="${t("q_country")}"><option value="">${t("cel_all")}</option>${countries
           .map((c) => `<option value="${esc(c)}">${esc(countryName(c))}</option>`)
           .join("")}</select>
-        <label><input type="checkbox" data-f="found"> ${t("cel_found")}</label>
       </div>
       <div class="cel-grid"></div>`;
     const grid = this.cellar.querySelector<HTMLElement>(".cel-grid")!;
     const input = this.cellar.querySelector<HTMLInputElement>("input[type=search]")!;
     const sel = this.cellar.querySelector<HTMLSelectElement>("select")!;
-    const onlyFound = this.cellar.querySelector<HTMLInputElement>("[data-f=found]")!;
-    // 1,285개를 한꺼번에 그리지 않고 150개씩, 스크롤이 끝에 닿으면 이어 붙인다
+    // 수백 개를 한꺼번에 그리지 않고 150개씩, 스크롤이 끝에 닿으면 이어 붙인다
     const BATCH = 150;
     let list: Wine[] = [];
     let shown = 0;
-    const item = (w: Wine) => {
-      const found = store.isFound(w.id);
-      return `<button class="cel-item ${found ? "" : "unknown"}" data-id="${w.id}">${bottleIcon(w, 52, found)}<span><b>${found ? esc(wineName(w)) : "???"}</b><small>${esc(countryName(w.country))} · ${esc(regionName(w).split(" · ")[0])}</small></span></button>`;
-    };
+    const item = (w: Wine) =>
+      `<button class="cel-item" data-id="${w.id}">${bottleIcon(w, 52)}<span><b>${esc(wineName(w))}</b><small>${esc(countryName(w.country))} · ${esc(regionName(w).split(" · ")[0])}</small></span></button>`;
     const sentinel = document.createElement("div");
     sentinel.className = "cel-more";
     const more = () => {
@@ -713,17 +776,15 @@ export class App {
     this.cellarIO = io;
     const draw = () => {
       const k = input.value.trim().toLowerCase();
-      list = WINES.filter((w) => {
+      list = mine.filter((w) => {
         if (sel.value && w.country !== sel.value) return false;
-        const found = store.isFound(w.id);
-        if (onlyFound.checked && !found) return false;
         if (!k) return true;
-        const place = `${regionName(w)} ${countryName(w.country)}`;
-        const hay = found ? `${wineName(w)} ${w.original} ${place} ${grapeName(w)}` : place;
-        return hay.toLowerCase().includes(k);
+        return `${wineName(w)} ${w.original} ${regionName(w)} ${countryName(w.country)} ${grapeName(w)}`.toLowerCase().includes(k);
       });
       shown = 0;
       grid.replaceChildren(sentinel);
+      // 아직 맞힌 와인이 없으면 퀴즈로 채우라고 알려 준다
+      if (!mine.length) sentinel.insertAdjacentHTML("beforebegin", `<p class="cel-empty">${t("cel_empty")}</p>`);
       grid.scrollTop = 0;
       more();
     };
@@ -735,7 +796,6 @@ export class App {
       typing = window.setTimeout(draw, 160);
     };
     sel.onchange = draw;
-    onlyFound.onchange = draw;
     this.cellar.onclick = (e) => {
       const el = e.target as HTMLElement;
       if (el.closest("[data-act=close]")) return this.closeOverlay();
@@ -760,7 +820,7 @@ export class App {
       ${
         found
           ? this.detailCard(w)
-          : `<div class="detail"><div class="dname">${bottleIcon(w, 46, false)}<div><b>${t("cel_unknown")}</b><small>${esc(countryName(w.country))}</small></div></div><p class="fact">${t("cel_unknownTip")}</p></div>`
+          : `<div class="detail"><div class="dname">${bottleIcon(w, 46, false)}<div><b>???</b><small>${t("cel_unknown")}</small></div></div><p class="fact">${t("cel_unknownTip")}</p></div>`
       }
       <div class="row">
         <button class="primary" data-act="quiz">${t("cel_quiz", { n })}</button>

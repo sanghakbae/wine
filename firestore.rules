@@ -33,8 +33,8 @@ service cloud.firestore {
     function validEntry(d) {
       return d.keys().hasOnly(['nick', 'cc', 'score', 'correct', 'total', 'lang', 'at', 'v'])
         && d.nick is string && d.nick.size() >= 1 && d.nick.size() <= 12
-        && (!('cc' in d) || (d.cc is string && d.cc.size() <= 2))
-        && d.score is int && d.score >= 0 && d.score <= 2000
+        && (!('cc' in d) || (d.cc is string && (d.cc == '' || d.cc.matches('^[A-Z]{2}$'))))
+        && d.score is int && d.score >= 0 && d.score <= 1350 && d.score <= d.correct * 150
         && d.total is int && d.total == 10
         && d.correct is int && d.correct >= 0 && d.correct <= d.total
         && d.lang is string && d.lang.size() <= 5

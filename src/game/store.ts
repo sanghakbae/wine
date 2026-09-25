@@ -86,8 +86,11 @@ async function flushNow() {
 
 onUser(async (u) => {
   if (u && u.uid !== uid) {
+    // 손님으로 방금 한 기록은 계정으로 옮긴다. 다른 계정에서 바로 바꿔 들어온 경우엔 앞 계정 기록을 섞지 않는다
+    const guest = uid === null ? state : null;
+    clearTimeout(timer);
+    timer = 0;
     uid = u.uid;
-    const guest = state; // 손님으로 방금 한 기록도 계정으로 옮긴다
     const legacy = read<Plain>(LEGACY_KEY);
     state = merge(guest, read<Plain>(cacheKey(uid)), legacy);
     listeners.forEach((f) => f());

@@ -57,6 +57,15 @@ export default defineConfig({
       workbox: {
         // 글꼴은 woff2 만 (woff 는 같은 글꼴의 구형 포맷)
         globPatterns: ["**/*.{js,css,html,woff2,png,svg,webmanifest}"],
+        // 언어별 와인 설명(8개 언어, 약 3MB)은 미리 받지 않고 실제로 쓰는 언어만 받아 둔다
+        globIgnores: ["**/i18n-*.js"],
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/i18n-[\w-]+\.js$/,
+            handler: "CacheFirst",
+            options: { cacheName: "wine-texts", expiration: { maxEntries: 24 } },
+          },
+        ],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/privacy\.html/],
@@ -79,6 +88,8 @@ export default defineConfig({
           if (id.includes("node_modules/three")) return "three";
           const part = id.match(/\/src\/data\/more\/(\w+)\.ts$/);
           if (part && part[1] !== "index") return `wines-${part[1]}`;
+          const text = id.match(/\/src\/i18n\/wines\/(\w+)\//);
+          if (text) return `i18n-${text[1]}`;
           return undefined;
         },
       },

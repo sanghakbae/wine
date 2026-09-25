@@ -316,6 +316,12 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 .hints-btns { display: flex; gap: 6px; flex-wrap: wrap; }
 @media (min-width: 1200px) { .hints-head b { font-size: 15px; } .hints-head small { font-size: 13px; } }
 .cel-more { grid-column: 1 / -1; height: 1px; }
+.confirm { margin: auto; max-width: 360px; padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: rgba(28,20,18,0.96); text-align: center; }
+.confirm p { margin: 0 0 12px; font-size: 15px; line-height: 1.5; }
+.confirm .row { justify-content: center; }
+.confirm .row button { flex: 1 1 0; }
+.confirm .danger { background: #8e2b24; border-color: #b8453b; color: #fff; }
+.cel-empty { grid-column: 1 / -1; margin: 24px 0; text-align: center; color: var(--muted); font-size: 14px; }
 
 /* Google 로그인 버튼: 구글 가이드 다크 테마 (배경 #131314, 테두리 #8E918F, 글자 #E3E3E3) */
 .gbtn { background: #131314; color: #e3e3e3; border: 1px solid #8e918f; border-radius: 4px; font-family: "Roboto", "Pretendard", -apple-system, "Apple SD Gothic Neo", sans-serif; font-weight: 500; letter-spacing: 0.01em; }
@@ -323,7 +329,7 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 .gbtn svg { flex: none; }
 
 /* ───────── 게임 중 왼쪽 위 랭킹: 작고 깔끔하게 */
-.live-rank { position: absolute; z-index: 3; left: max(10px, env(safe-area-inset-left)); top: 52px; width: 132px; padding: 4px 6px 5px; border-radius: 6px; background: rgba(14,10,9,0.58); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 0 0 1px rgba(217,181,106,0.18) inset; font-size: 10.5px; line-height: 1.3; }
+.live-rank { position: absolute; z-index: 3; left: max(10px, env(safe-area-inset-left)); top: 52px; width: 132px; overflow: hidden; padding: 4px 6px 5px; border-radius: 6px; background: rgba(14,10,9,0.58); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 0 0 1px rgba(217,181,106,0.18) inset; font-size: 10.5px; line-height: 1.3; }
 .live-rank.collapsed { width: auto; padding: 2px 4px; }
 .lr-head { display: flex; align-items: center; gap: 4px; width: 100%; padding: 1px 2px; border: 0; border-radius: 4px; background: none; color: var(--gold); font-size: 10.5px; font-weight: 700; text-align: left; }
 .lr-head span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

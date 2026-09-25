@@ -44,7 +44,8 @@ const names = new Map<string, Intl.DisplayNames | null>();
 
 /** 나라 코드 → 지금 언어의 나라 이름 */
 export function countryLabel(cc: string): string {
-  if (!cc) return "";
+  // 랭킹의 나라 코드는 남이 쓴 값이다: 두 글자 대문자가 아니면 그리지 않는다 (Intl 이 RangeError 를 던진다)
+  if (!/^[A-Z]{2}$/.test(cc)) return "";
   const l = lang();
   if (!names.has(l)) {
     try {
@@ -53,7 +54,11 @@ export function countryLabel(cc: string): string {
       names.set(l, null);
     }
   }
-  return names.get(l)?.of(cc) ?? cc;
+  try {
+    return names.get(l)?.of(cc) ?? cc;
+  } catch {
+    return cc;
+  }
 }
 
 /** 길면 앞 3자까지만 (한글·이모지도 글자 단위로 자른다) */

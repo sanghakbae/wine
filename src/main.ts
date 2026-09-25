@@ -20,7 +20,7 @@ import { lang, loadWineTexts } from "./i18n";
 import { startAnalytics, track } from "./analytics";
 import { standalone } from "./ui/install";
 import { startAuth } from "./auth";
-import { watchUpdates } from "./ui/update";
+import { cacheWineTexts, watchUpdates } from "./ui/update";
 
 async function boot() {
   // 라벨 캔버스에 글꼴이 빠지지 않도록, 그리고 고른 언어의 와인 해설을 먼저 불러 둔다
@@ -31,10 +31,11 @@ async function boot() {
   const music = new Music();
   const game = new App(app, stage, music);
   watchUpdates(() => game.idle);
+  cacheWineTexts();
   startAuth();
   startAnalytics();
   track("app_open", { lang: lang(), standalone: standalone(), version: __APP_VERSION__ });
-  if (import.meta.env.DEV) Object.assign(window, { __stage: stage, __music: music });
+  if (import.meta.env.DEV) Object.assign(window, { __stage: stage, __music: music, __app: game });
 }
 boot().catch((e) => {
   // 시작하다 실패하면(WebGL 미지원 등) 로딩 화면에 멈춰 있지 않고 알려 준다

@@ -54,7 +54,7 @@ export async function topScores(level: Level, n = 20): Promise<Entry[] | null> {
       return {
         uid: d.id,
         nick: String(x.nick ?? "?"),
-        cc: typeof x.cc === "string" ? x.cc : "",
+        cc: typeof x.cc === "string" && /^[A-Z]{2}$/.test(x.cc) ? x.cc : "",
         score: Number(x.score ?? 0),
         correct: Number(x.correct ?? 0),
         total: Number(x.total ?? 10),
@@ -83,8 +83,9 @@ export async function submitScore(level: Level, nick: string, cc: string, score:
     const best = Math.max(prevScore, score);
     if (score >= prevScore) {
       await fs.setDoc(ref, {
-        nick: Array.from(nick.trim() || "?").slice(0, 12).join(""),
-        cc: cc.slice(0, 2),
+        // 공개 랭킹에는 Google 이름의 앞 3자만 남긴다 (화면에도 3자까지만 보인다)
+        nick: Array.from(nick.trim() || "?").slice(0, 3).join(""),
+        cc: /^[A-Z]{2}$/.test(cc) ? cc : "",
         score,
         correct,
         total,
