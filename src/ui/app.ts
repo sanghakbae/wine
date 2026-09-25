@@ -37,8 +37,14 @@ import {
 import type { Stage } from "../scene/stage";
 import type { Music } from "../audio/music";
 import { bottleIcon } from "./icon";
-import { canInstall, install, iosNeedsTip, onInstallChange } from "./install";
+import { canInstall, install, onInstallChange } from "./install";
+import { currentUser, deleteAccount, onUser, signIn, signOut } from "../auth";
 import { track } from "../analytics";
+import { cloudEnabled, deleteMyData, recordAnswer, saveNick, savedNick, submitScore, topScores, wineRate } from "../cloud";
+
+/** Google 로그인 버튼 (구글 브랜드 가이드의 흰 버튼 + G 로고) */
+const GOOGLE_BTN = (label: string) =>
+  `<button class="gbtn" data-act="login"><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>${label}</span></button>`;
 
 /** style.css 의 오른쪽 기둥 레이아웃 조건과 같아야 한다 */
 const SIDE_QUERY = "(min-width: 900px), (orientation: landscape) and (max-height: 520px)";
@@ -57,6 +63,9 @@ type Mode = { kind: "game"; level: Level } | { kind: "wine"; level: Level; wine:
 
 export class App {
   private hud: HTMLElement;
+  private hero: HTMLElement;
+  private vignette: HTMLElement;
+  private view: "landing" | "play" | "result" | "wine" = "landing";
   private panel: HTMLElement;
   private cellar: HTMLElement;
   private sound: HTMLButtonElement;
@@ -80,11 +89,15 @@ export class App {
   ) {
     root.insertAdjacentHTML(
       "beforeend",
-      `<header class="hud" hidden></header>
+      `<div class="vignette" hidden></div>
+       <header class="hero" hidden></header>
+       <header class="hud" hidden></header>
        <section class="panel"></section>
        <button class="sound" aria-pressed="false"></button>
        <div class="cellar" hidden></div>`,
     );
+    this.hero = root.querySelector(".hero")!;
+    this.vignette = root.querySelector(".vignette")!;
     this.hud = root.querySelector(".hud")!;
     this.panel = root.querySelector(".panel")!;
     this.cellar = root.querySelector(".cellar")!;
@@ -95,12 +108,17 @@ export class App {
       track("music_toggle", { on: this.music.on });
     };
     this.music.onChange = () => this.renderSound();
-    onInstallChange(() => {
-      if (this.panel.classList.contains("title")) this.showTitle();
+    onInstallChange(() => this.view === "landing" && this.renderLanding());
+    // 로그인·로그아웃하거나 서버 기록을 불러오면 보이는 화면을 다시 그린다
+    onUser(() => {
+      if (this.view === "landing") this.renderLanding();
+      else if (this.view === "result") this.renderResult();
     });
+    store.onChange(() => this.view === "landing" && this.renderLanding());
     this.renderSound();
     new ResizeObserver(() => this.syncInsets()).observe(this.panel);
     new ResizeObserver(() => this.syncInsets()).observe(this.hud);
+    new ResizeObserver(() => this.syncInsets()).observe(this.hero);
     window.addEventListener("resize", () => {
       this.syncInsets();
       fitLines(this.panel);
@@ -120,20 +138,29 @@ export class App {
   }
 
   private syncInsets() {
-    const wide = matchMedia(SIDE_QUERY).matches;
     const pr = this.panel.getBoundingClientRect();
-    this.stage.bottomInset = wide ? 0 : pr.height + 8;
-    this.stage.rightInset = wide ? pr.width + 24 : 0;
-    this.stage.topInset = this.hud.hidden ? 0 : this.hud.getBoundingClientRect().height;
+    if (this.view === "landing") {
+      // 랜딩: 위 타이틀과 아래 버튼 사이 가운데에 병을 세운다
+      this.stage.bottomInset = window.innerHeight - pr.top + 8;
+      this.stage.rightInset = 0;
+      this.stage.topInset = this.hero.getBoundingClientRect().bottom;
+    } else {
+      const wide = matchMedia(SIDE_QUERY).matches;
+      this.stage.bottomInset = wide ? 0 : pr.height + 8;
+      this.stage.rightInset = wide ? pr.width + 24 : 0;
+      this.stage.topInset = this.hud.hidden ? 0 : this.hud.getBoundingClientRect().height;
+    }
     this.stage.resize();
   }
 
-  // ───────────────────────── 첫 화면
+  // ───────────────────────── 첫 화면 (랜딩)
   private showTitle() {
+    this.view = "landing";
     this.hud.hidden = true;
     this.cellar.hidden = true;
+    this.hero.hidden = false;
+    this.vignette.hidden = false;
     document.title = `${t("appName")} — Wine Quiz`;
-    const level = store.level;
     const spin = () => {
       const pool = WINES.filter((w) => w.tier <= 2);
       const w = pool[Math.floor(Math.random() * pool.length)];
@@ -142,13 +169,20 @@ export class App {
     spin();
     clearInterval(this.titleTimer);
     this.titleTimer = window.setInterval(spin, 7000);
-    this.panel.className = "panel title";
+    this.renderLanding();
+  }
+
+  private renderLanding() {
+    const level = store.level;
+    const user = currentUser();
+    const sameTitle = t("appName").toUpperCase() === "BLIND BOTTLE";
+    this.hero.innerHTML = `
+      <div class="eyebrow"><i></i>WINE QUIZ · ${WINES.length.toLocaleString(lang())}<i></i></div>
+      <h1 class="wordmark">BLIND BOTTLE</h1>
+      ${sameTitle ? "" : `<div class="subtitle">${t("appName")}</div>`}
+      <p class="tag">${t("tagline", { n: WINES.length })}</p>`;
+    this.panel.className = "panel landing";
     this.panel.innerHTML = `
-      <div class="brand">
-        <div class="logo">BLIND BOTTLE</div>
-        <h1>${t("appName")}</h1>
-        <p class="tag">${t("tagline", { n: WINES.length })}</p>
-      </div>
       <div class="levels" role="radiogroup">
         ${(Object.keys(LEVELS) as Level[])
           .map(
@@ -159,36 +193,62 @@ export class App {
           )
           .join("")}
       </div>
-      <div class="row">
-        <button class="primary" data-act="start">${t("start", { n: ROUNDS })}</button>
-        <button data-act="cellar">${t("cellarBtn", { a: store.foundCount, b: WINES.length })}</button>
-        ${canInstall() ? `<button class="install" data-act="install">⬇ ${t("install")}</button>` : ""}
-      </div>
-      ${iosNeedsTip() ? `<p class="ios-tip">${t("iosTip")}</p>` : ""}
-      <div class="foot">
+      <button class="primary cta" data-act="start">${t("start_now")}</button>
+      ${
+        cloudEnabled
+          ? user
+            ? `<div class="me">${user.photo ? `<img src="${esc(user.photo)}" alt="" referrerpolicy="no-referrer">` : ""}<span><b>${esc(user.name)}</b><small>${t("saved_note")}</small></span><button class="link" data-act="logout">${t("logout")}</button></div>`
+            : `${GOOGLE_BTN(t("login_google"))}<p class="save-note">${t("login_save_note")}</p>`
+          : ""
+      }
+      <nav class="links">
+        <button class="link" data-act="cellar">${t("cellarBtn", { a: store.foundCount, b: WINES.length })}</button>
+        ${cloudEnabled ? `<button class="link" data-act="rank">🏆 ${t("rank_btn")}</button>` : ""}
+        ${canInstall() ? `<button class="link" data-act="install">⬇ ${t("install")}</button>` : ""}
+        ${cloudEnabled && user ? `<button class="link danger" data-act="delete">${t("delete_account")}</button>` : ""}
+      </nav>
+      <footer class="foot">
         <label class="lang">🌐 <select aria-label="${t("langLabel")}">${(Object.keys(LANG_NAMES) as Lang[])
           .map((l) => `<option value="${l}" ${l === lang() ? "selected" : ""}>${LANG_NAMES[l]}</option>`)
           .join("")}</select></label>
-        <span>${t("foot")} · v${__APP_VERSION__}</span>
-      </div>`;
+        <a href="privacy.html" target="_blank" rel="noopener">${t("privacy")}</a>
+      </footer>`;
     this.panel.querySelector<HTMLSelectElement>(".lang select")!.onchange = async (e) => {
       setLang((e.target as HTMLSelectElement).value as Lang);
       track("language_change", { lang: lang() });
       await loadWineTexts();
-      this.showTitle();
+      this.renderLanding();
     };
-    this.panel.onclick = (e) => {
+    this.panel.onclick = async (e) => {
       const el = (e.target as HTMLElement).closest<HTMLElement>("[data-level],[data-act]");
       if (!el) return;
       this.music.unlock();
       if (el.dataset.level) {
         store.level = el.dataset.level as Level;
-        this.showTitle();
-      } else if (el.dataset.act === "start") this.startGame({ kind: "game", level: store.level });
-      else if (el.dataset.act === "cellar") this.openCellar();
-      else if (el.dataset.act === "install") {
-        track("install_click");
-        install();
+        this.renderLanding();
+        return;
+      }
+      switch (el.dataset.act) {
+        case "start":
+          return this.startGame({ kind: "game", level: store.level });
+        case "cellar":
+          return this.openCellar();
+        case "rank":
+          return this.openRanking(store.level);
+        case "install":
+          track("install_click");
+          return install();
+        case "login":
+          track("login_click", { where: "landing" });
+          return signIn().catch(() => null);
+        case "logout":
+          return signOut();
+        case "delete":
+          if (!confirm(t("delete_confirm"))) return;
+          await deleteMyData().catch(() => null);
+          await deleteAccount().catch(() => null);
+          track("account_delete");
+          return;
       }
     };
     this.syncInsets();
@@ -205,6 +265,9 @@ export class App {
     this.results = [];
     this.used.clear();
     this.recent = [];
+    this.view = "play";
+    this.hero.hidden = true;
+    this.vignette.hidden = true;
     this.hud.hidden = false;
     this.cellar.hidden = true;
     track("game_start", { level: mode.level, mode: mode.kind, lang: lang(), ...(mode.kind === "wine" ? { wine: mode.wine.id } : {}) });
@@ -294,6 +357,7 @@ export class App {
     } else this.streak = 0;
     this.results.push({ q, correct, points });
     track("answer", { qtype: q.qtype, correct, level: this.mode.level, wine: q.wine.id, hints: this.hintsUsed.length });
+    recordAnswer(q.wine.id, correct);
     this.music.cue(correct ? "right" : "wrong");
 
     this.panel.querySelectorAll<HTMLButtonElement>(".opt").forEach((b, k) => {
@@ -314,6 +378,7 @@ export class App {
       <button class="primary" data-act="next">${last ? t("seeResult") : t("next")}</button>`;
     this.syncInsets();
     after.querySelector<HTMLButtonElement>("[data-act=next]")?.focus({ preventScroll: true });
+    this.fillRates();
     // 폰에서는 패널이 길어지므로 정답·해설이 보이게 내려 준다
     requestAnimationFrame(() => this.panel.scrollTo({ top: (after as HTMLElement).offsetTop - 8, behavior: "smooth" }));
   }
@@ -336,24 +401,47 @@ export class App {
       <div class="dname">${bottleIcon(w, 46)}<div><b>${esc(wineName(w))}</b><small>${esc(originalFull(w))}</small></div></div>
       <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
       ${fact ? `<p class="fact">${esc(fact)}</p>` : ""}${shapeNote}
+      ${cloudEnabled ? `<p class="rate" data-rate="${w.id}"></p>` : ""}
     </div>`;
   }
 
   // ───────────────────────── 결과
+  private isBest = false;
+  private submitted: number | null = null;
+
+  /** 게임을 끝내며 기록을 한 번만 확정한다 */
   private showResult() {
     const m = this.mode;
     const right = this.results.filter((r) => r.correct).length;
-    const isBest = m.kind === "game" ? store.finish(m.level, this.score) : false;
-    track("game_end", { level: m.level, mode: m.kind, score: this.score, correct: right, total: this.results.length, best: isBest });
+    this.isBest = m.kind === "game" ? store.finish(m.level, this.score) : false;
+    this.submitted = null;
+    track("game_end", { level: m.level, mode: m.kind, score: this.score, correct: right, total: this.results.length, best: this.isBest, saved: store.saving });
     this.music.cue("finish");
+    this.view = "result";
     this.hud.hidden = true;
+    this.renderResult();
+  }
+
+  /** 결과 화면 (로그인하면 다시 그려서 랭킹 등록 폼을 보여 준다) */
+  private renderResult() {
+    const m = this.mode;
+    const right = this.results.filter((r) => r.correct).length;
+    const user = currentUser();
+    let rankBlock = "";
+    if (cloudEnabled && m.kind === "game") {
+      if (!user) rankBlock = `<div class="rank-login">${GOOGLE_BTN(t("login_to_rank"))}<p class="save-note">${t("login_save_note")}</p></div>`;
+      else if (this.submitted) rankBlock = `<p class="rank-msg">${t("rank_done", { n: this.submitted })} · <a href="#" data-act="rank">${t("rank_title")}</a></p>`;
+      else
+        rankBlock = `<form class="rank-form"><input name="nick" maxlength="12" placeholder="${t("rank_nick")}" value="${esc(savedNick() || user.name.slice(0, 12))}" autocomplete="nickname" required><button class="primary">${t("rank_submit")}</button><span class="rank-msg" aria-live="polite"></span></form>`;
+    }
     this.panel.className = "panel result";
     this.panel.innerHTML = `
       <div class="res-head">
         <div class="big">${this.score.toLocaleString(lang())}<small>${t("ptsUnit")}</small></div>
-        <div>${t("resCorrect", { a: right, b: this.results.length })}${isBest ? ` · <span class="best">${t("resBest")}</span>` : ""}</div>
+        <div>${t("resCorrect", { a: right, b: this.results.length })}${this.isBest ? ` · <span class="best">${t("resBest")}</span>` : ""}</div>
         <div class="grade">${grade(right / this.results.length)}</div>
       </div>
+      ${rankBlock}
       <ol class="res-list">
         ${this.results
           .map(
@@ -375,11 +463,87 @@ export class App {
         return;
       }
       const act = el.closest<HTMLElement>("[data-act]")?.dataset.act;
+      if (act === "rank") {
+        e.preventDefault();
+        return this.openRanking(m.level);
+      }
+      if (act === "login") {
+        track("login_click", { where: "result" });
+        signIn().catch(() => null);
+        return;
+      }
       if (act === "again") this.startGame(m.kind === "wine" ? { ...m, queue: wineQuiz(m.wine, m.level) } : m);
       else if (act === "cellar") this.openCellar();
       else if (act === "home") this.showTitle();
     };
+    const form = this.panel.querySelector<HTMLFormElement>(".rank-form");
+    if (form) {
+      const score = this.score;
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const nick = (form.elements.namedItem("nick") as HTMLInputElement).value.trim();
+        if (!nick) return;
+        saveNick(nick);
+        const btn = form.querySelector("button")!;
+        const msg = form.querySelector<HTMLElement>(".rank-msg")!;
+        btn.disabled = true;
+        const rank = await submitScore(m.level, nick, score, right, this.results.length, lang());
+        track("rank_submit", { level: m.level, score, ok: rank !== null });
+        if (rank) {
+          this.submitted = rank;
+          this.renderResult();
+        } else {
+          msg.textContent = t("rank_fail");
+          btn.disabled = false;
+        }
+      };
+    }
     this.syncInsets();
+  }
+
+  /** 해설 카드에 와인별 정답률 채우기 */
+  private fillRates() {
+    this.panel.querySelectorAll<HTMLElement>("[data-rate]").forEach(async (el) => {
+      const r = await wineRate(el.dataset.rate!);
+      if (r && r.n > 0) el.textContent = t("wine_rate", { p: Math.round((r.c / r.n) * 100), n: r.n });
+    });
+  }
+
+  // ───────────────────────── 전체 랭킹
+  private async openRanking(level: Level) {
+    clearInterval(this.titleTimer);
+    track("rank_open", { level });
+    this.cellar.hidden = false;
+    this.cellar.innerHTML = `
+      <div class="cel-head">
+        <h2>🏆 ${t("rank_title")}</h2>
+        <button class="ghost" data-act="close" aria-label="${t("close")}">✕</button>
+      </div>
+      <div class="rank-tabs" role="tablist">${(Object.keys(LEVELS) as Level[])
+        .map((l) => `<button role="tab" aria-selected="${l === level}" class="${l === level ? "on" : ""}" data-level="${l}">${levelName(l)}</button>`)
+        .join("")}</div>
+      <ol class="rank-list"><li class="rank-note">…</li></ol>`;
+    this.cellar.onclick = (e) => {
+      const el = e.target as HTMLElement;
+      if (el.closest("[data-act=close]")) {
+        this.cellar.hidden = true;
+        if (this.hud.hidden && !this.panel.classList.contains("result")) this.showTitle();
+        return;
+      }
+      const tab = el.closest<HTMLElement>("[data-level]");
+      if (tab) this.openRanking(tab.dataset.level as Level);
+    };
+    const list = await topScores(level, 20);
+    const ol = this.cellar.querySelector(".rank-list");
+    if (!ol) return;
+    if (!list) ol.innerHTML = `<li class="rank-note">${t("rank_fail")}</li>`;
+    else if (!list.length) ol.innerHTML = `<li class="rank-note">${t("rank_empty")}</li>`;
+    else
+      ol.innerHTML = list
+        .map(
+          (x, i) => `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="nk">${esc(x.nick)}</span><span class="cr">${x.correct}/${x.total}</span><em>${x.score.toLocaleString(lang())}</em></li>`,
+        )
+        .join("");
   }
 
   // ───────────────────────── 와인 셀러 (도감)
@@ -443,6 +607,9 @@ export class App {
   private viewWine(w: Wine) {
     const found = store.isFound(w.id);
     track("wine_view", { wine: w.id, found });
+    this.view = "wine";
+    this.hero.hidden = true;
+    this.vignette.hidden = true;
     this.cellar.hidden = true;
     this.hud.hidden = true;
     this.stage.show(w, found ? { name: false, info: false } : { name: true, info: true }, pickVintage(w));
@@ -459,6 +626,7 @@ export class App {
         <button data-act="back">${t("cel_back")}</button>
         <button data-act="home">${t("home")}</button>
       </div>`;
+    this.fillRates();
     this.panel.onclick = (e) => {
       const act = (e.target as HTMLElement).closest<HTMLElement>("[data-act]")?.dataset.act;
       if (act === "quiz") this.startGame({ kind: "wine", level: store.level, wine: w, queue: wineQuiz(w, store.level) });

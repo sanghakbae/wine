@@ -19,6 +19,7 @@ import { FONT_LOADS } from "./label/painter";
 import { lang, loadWineTexts } from "./i18n";
 import { startAnalytics, track } from "./analytics";
 import { standalone } from "./ui/install";
+import { startAuth } from "./auth";
 
 async function boot() {
   // 라벨 캔버스에 글꼴이 빠지지 않도록, 그리고 고른 언어의 와인 해설을 먼저 불러 둔다
@@ -28,6 +29,7 @@ async function boot() {
   const stage = new Stage(app.querySelector(".stage")!);
   const music = new Music();
   new App(app, stage, music);
+  startAuth();
   startAnalytics();
   track("app_open", { lang: lang(), standalone: standalone(), version: __APP_VERSION__ });
   if (import.meta.env.DEV) Object.assign(window, { __stage: stage, __music: music });

@@ -1,0 +1,62 @@
+rules_version = '2';
+
+// 블라인드 보틀 Firestore 규칙 — 쓰기는 모두 Google 로그인한 사람만, 자기 문서만.
+//  - users/{uid}: 게임 기록 (최고 점수·맞힌 와인·판 수)
+//  - leaderboard/{level}/entries/{uid}: 난이도별 최고 기록. 점수가 같거나 오를 때만 고칠 수 있다.
+//  - wineStats/{wine}: 와인별 푼 횟수 n, 맞힌 횟수 c. 한 번에 n 은 1, c 는 0 또는 1 만 늘릴 수 있다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function google() {
+      return request.auth != null && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+    function me(uid) {
+      return google() && request.auth.uid == uid;
+    }
+
+    match /users/{uid} {
+      allow read, delete: if me(uid);
+      allow create, update: if me(uid)
+        && request.resource.data.keys().hasOnly(['name', 'best', 'found', 'plays', 'updatedAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 40
+        && request.resource.data.best is map && request.resource.data.best.keys().hasOnly(['easy', 'normal', 'hard'])
+        && request.resource.data.found is list && request.resource.data.found.size() <= 5000
+        && request.resource.data.plays is int && request.resource.data.plays >= 0
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function validEntry(d) {
+      return d.keys().hasOnly(['nick', 'score', 'correct', 'total', 'lang', 'at', 'v'])
+        && d.nick is string && d.nick.size() >= 1 && d.nick.size() <= 12
+        && d.score is int && d.score >= 0 && d.score <= 2000
+        && d.total is int && d.total == 10
+        && d.correct is int && d.correct >= 0 && d.correct <= d.total
+        && d.lang is string && d.lang.size() <= 5
+        && d.at == request.time
+        && d.v is string && d.v.size() <= 12;
+    }
+
+    match /leaderboard/{level}/entries/{uid} {
+      allow read: if level in ['easy', 'normal', 'hard'];
+      allow create: if me(uid) && level in ['easy', 'normal', 'hard'] && validEntry(request.resource.data);
+      allow update: if me(uid) && validEntry(request.resource.data) && request.resource.data.score >= resource.data.score;
+      allow delete: if me(uid);
+    }
+
+    match /wineStats/{wine} {
+      allow read: if true;
+      allow create: if google() && wine.size() <= 40
+        && request.resource.data.keys().hasOnly(['n', 'c'])
+        && request.resource.data.n == 1 && request.resource.data.c in [0, 1];
+      allow update: if google()
+        && request.resource.data.keys().hasOnly(['n', 'c'])
+        && request.resource.data.n == resource.data.n + 1
+        && (request.resource.data.c == resource.data.c || request.resource.data.c == resource.data.c + 1);
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

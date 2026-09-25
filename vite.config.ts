@@ -59,6 +59,7 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,woff2,png,svg,webmanifest}"],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: "index.html",
+        navigateFallbackDenylist: [/privacy\.html/],
         cleanupOutdatedCaches: true,
       },
     }),
@@ -70,6 +71,8 @@ export default defineConfig({
     target: "es2022",
     chunkSizeWarningLimit: 900,
     rollupOptions: {
+      // 개인정보 처리방침은 따로 된 정적 페이지
+      input: { main: "index.html", privacy: "privacy.html" },
       output: {
         // 한 파일이 너무 크지 않게: three.js · 와인 데이터 · 게임 코드를 따로 받는다 (병렬로 받고, 데이터만 바뀌어도 three 는 캐시에 남는다)
         manualChunks(id) {

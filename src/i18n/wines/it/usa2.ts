@@ -373,6 +373,169 @@ const T: Record<string, WineText> = {
     fact: "La cantina delle Sta. Rita Hills dove Miles e Jack, protagonisti del film «Sideways», si fermano per la prima degustazione.",
     quiz: [{ q: "Che cosa fece Richard Sanford nel 1971 con Michael Benedict nelle Sta. Rita Hills?", a: "Piantò per primo il Pinot Nero nella zona", x: ["Aprì la prima cantina di spumanti", "Organizzò la prima asta di vini", "Ottenne la prima certificazione biologica"] }],
   },
+  us2_fess_parker: {
+    fact: "Cantina di famiglia fondata nella Santa Ynez Valley dall’attore Fess Parker. È famosa per il Pinot Nero e i vitigni del Rodano di Santa Barbara.",
+    quiz: [{ q: "Quale eroe della frontiera americana interpretò Fess Parker in una serie Disney degli anni ’50?", a: "Davy Crockett", x: ["Buffalo Bill", "Wyatt Earp", "Il Cavaliere Solitario"] }],
+  },
+  us2_chalone_chard: {
+    fact: "Cantina su un altopiano calcareo vicino ai Pinnacles. Come in Borgogna, coltiva Chardonnay e Pinot Nero su suoli calcarei.",
+    quiz: [{ q: "In che posizione si classificò lo Chardonnay Chalone 1974 tra i bianchi del «Giudizio di Parigi» del 1976?", a: "Terzo", x: ["Primo", "Sesto", "Decimo"] }],
+  },
+  us2_wente_morningfog: {
+    fact: "Chardonnay della cantina familiare più longeva d’America, fondata nel 1883 nella Livermore Valley dal tedesco Carl Wente.",
+    quiz: [{ q: "Come si chiama il clone di Chardonnay da cui discende la maggior parte dei vigneti di Chardonnay della California?", a: "Clone Wente", x: ["Clone Mondavi", "Clone Chablis", "Clone Napa"] }],
+  },
+  us2_concannon_ps: {
+    fact: "Fondata nel 1883 nella Livermore Valley dall’irlandese James Concannon. Durante il Proibizionismo sopravvisse producendo vino da messa.",
+    quiz: [{ q: "Che cosa fece per primo negli Stati Uniti Concannon negli anni ’60?", a: "Lanciò il Petite Sirah come vino con il nome del vitigno", x: ["Usò il tappo a vite su un grande vino", "Produsse uno spumante rosé", "Vendette vino in lattina"] }],
+  },
+  us2_7deadlyzins: {
+    fact: "Vino di successo lanciato con vecchie viti di Zinfandel dai fratelli Michael e David, della famiglia Phillips, agricoltori da generazioni a Lodi.",
+    quiz: [{ q: "A che cosa allude il nome 7 Deadly Zins?", a: "Ai sette peccati capitali del cristianesimo (Seven Deadly Sins)", x: ["Alle sette meraviglie del mondo", "A sette vigneti", "A sette anni di affinamento"] }],
+  },
+  us2_adelsheim: {
+    fact: "Una delle prime cantine dell’Oregon, nata nel 1971 quando David Adelsheim e la moglie acquistarono un terreno sulle colline a nord della Willamette Valley.",
+    quiz: [{ q: "Chi dipinse i ritratti femminili che hanno a lungo decorato le etichette di Adelsheim?", a: "La cofondatrice Ginny Adelsheim", x: ["Andy Warhol", "Norman Rockwell", "Georgia O’Keeffe"] }],
+  },
+  us2_argyle_brut: {
+    fact: "Pioniere degli spumanti dell’Oregon, fondato a Dundee nel 1987 da un enologo australiano e dall’enologo americano Rollin Soles.",
+    quiz: [{ q: "Quale enologo australiano fondò Argyle insieme a Rollin Soles?", a: "Brian Croser", x: ["Peter Lehmann", "Wolf Blass", "John Duval"] }],
+  },
+  us2_sokol_blosser: {
+    fact: "Cantina pioniera dell’Oregon che piantò le viti a Dundee Hills nel 1971. Ha puntato presto sull’agricoltura e l’architettura sostenibili.",
+    quiz: [{ q: "Come nacque il nome Sokol Blosser?", a: "Unendo i cognomi dei coniugi fondatori, Susan Sokol e Bill Blosser", x: ["Unendo i nomi di due paesi", "Dal polacco, «collina del sole»", "È il nome del primo proprietario del vigneto"] }],
+  },
+  us2_wvv_estate: {
+    fact: "Cantina della Willamette Valley fondata da Jim Bernau nel 1983. Ha fatto molto per far conoscere al grande pubblico il Pinot Nero dell’Oregon.",
+    quiz: [{ q: "Qual è la particolare struttura proprietaria di Willamette Valley Vineyards?", a: "È una società quotata al Nasdaq, divisa tra moltissimi piccoli azionisti", x: ["È di proprietà di una comunità monastica", "È di proprietà di un’università statale", "È di proprietà di una tribù nativa"] }],
+  },
+  us2_ponzi_tavola: {
+    fact: "Cantina pioniera della Willamette Valley fondata nel 1970 da Dick e Nancy Ponzi. La figlia Luisa ne ha curato a lungo la vinificazione.",
+    quiz: [{ q: "Quale maison di champagne ha acquistato Ponzi Vineyards nel 2021?", a: "Bollinger", x: ["Moët & Chandon", "Louis Roederer", "Taittinger"] }],
+  },
+  us2_resonance: {
+    fact: "La prima cantina fondata fuori dalla Francia da una grande casa di Borgogna. Nasce dall’acquisto, nel 2013, del vigneto Résonance a Yamhill-Carlton.",
+    quiz: [{ q: "Quale négociant di Borgogna ha fondato Résonance?", a: "Louis Jadot", x: ["Joseph Drouhin", "Bouchard Père & Fils", "Albert Bichot"] }],
+  },
+  us2_nicolas_jay: {
+    fact: "Cantina fondata in Oregon nel 2014 dal vinificatore borgognone Jean-Nicolas Méo, di Vosne-Romanée, e dal discografico Jay Boberg.",
+    quiz: [{ q: "Quale domaine di Borgogna guida Jean-Nicolas Méo, cofondatore di Nicolas-Jay?", a: "Domaine Méo-Camuzet", x: ["Domaine Leroy", "Domaine Dujac", "Domaine Georges Roumier"] }],
+  },
+  us2_columbia_crest_ge: {
+    fact: "Grande cantina dello stato di Washington, dello stesso gruppo di Chateau Ste. Michelle. Si trova nelle Horse Heaven Hills, affacciate sul fiume Columbia.",
+    quiz: [{ q: "Quale vino di Columbia Crest fu eletto «Wine of the Year» da Wine Spectator nel 2009?", a: "Il Reserve Cabernet Sauvignon 2005", x: ["Il Grand Estates Merlot", "L’H3 Cabernet Sauvignon", "Il Two Vines Red Blend"] }],
+  },
+  us2_14hands_cab: {
+    fact: "Marchio di Washington lanciato nel 2005 dal gruppo Chateau Ste. Michelle. Nato per i ristoranti, è diventato un grande marchio grazie al successo.",
+    quiz: [{ q: "A che cosa si riferisce il nome 14 Hands?", a: "All’altezza dei piccoli cavalli selvaggi che correvano per le Horse Heaven Hills", x: ["Ai 14 fondatori", "A 14 vigneti", "Ai 14 vendemmiatori"] }],
+  },
+  us2_kung_fu_girl: {
+    fact: "Riesling creato da Charles Smith, l’anticonformista del vino di Washington. Nel 2016 i suoi marchi sono stati venduti a Constellation Brands.",
+    quiz: [{ q: "Che cosa faceva in Europa Charles Smith prima di produrre vino?", a: "Il manager di band rock", x: ["Lo skateboarder professionista", "Lo stuntman cinematografico", "Lo chef di ristorante"] }],
+  },
+  us2_andrew_will_sorella: {
+    fact: "Assemblaggio bordolese della cantina fondata nel 1989 da Chris Camarda. «Sorella» in italiano ricorda la sorella scomparsa.",
+    quiz: [{ q: "Da chi viene il nome della cantina Andrew Will?", a: "Dal nipote del fondatore, Andrew, e dal figlio, Will", x: ["Dai due fratelli del fondatore", "Dai due proprietari del primo vigneto", "Da un poeta inglese"] }],
+  },
+  us2_woodward_canyon: {
+    fact: "La seconda cantina della Walla Walla Valley, fondata nel 1981 da Rick Small. Ha costruito presto la fama del Cabernet di Washington.",
+    quiz: [{ q: "Qual è la particolarità dell’etichetta della Woodward Canyon Artist Series?", a: "Ogni anno riporta l’opera di un pittore diverso", x: ["Riporta una foto della famiglia del fondatore", "Riporta una foto aerea del vigneto", "Riporta il grafico meteo dell’annata"] }],
+  },
+  us2_lecole41_semillon: {
+    fact: "La terza cantina della Walla Walla Valley, aperta nel 1983 in una vecchia scuola del 1915 a Frenchtown. «L’Ecole» in francese significa «la scuola».",
+    quiz: [{ q: "Che cosa indica il «41» di L’Ecole No 41?", a: "Il numero del distretto scolastico a cui apparteneva la scuola", x: ["Il 41° compleanno del fondatore", "La strada statale 41", "41 vigneti"] }],
+  },
+  us2_long_shadows_sequel: {
+    fact: "Il Syrah di Long Shadows, progetto con cui Allen Shoup, già alla guida di Chateau Ste. Michelle, ha affidato un vino ciascuno a vinificatori di fama mondiale.",
+    quiz: [{ q: "Di quale grande casa australiana fu capo enologo John Duval, che produce Sequel?", a: "Penfolds", x: ["Henschke", "Torbreck", "Two Hands"] }],
+  },
+  us2_long_shadows_pedestal: {
+    fact: "Rosso di Washington a base di Merlot che Long Shadows affida a un consulente star di Bordeaux.",
+    quiz: [{ q: "Quale celebre consulente enologo bordolese produce il Pedestal Merlot?", a: "Michel Rolland", x: ["Pierre Seillan", "Stéphane Derenoncourt", "Éric Boissenot"] }],
+  },
+  us2_long_shadows_feather: {
+    fact: "Cabernet di Washington che Long Shadows affida a un maestro del Cabernet di montagna della Napa.",
+    quiz: [{ q: "Quale vinificatore di Howell Mountain, nella Napa, produce il Feather Cabernet?", a: "Randy Dunn", x: ["Heidi Barrett", "Paul Hobbs", "Philippe Melka"] }],
+  },
+  us2_long_shadows_poetsleap: {
+    fact: "Riesling di Washington che Long Shadows affida a un vinificatore di una grande casa della Nahe, in Germania.",
+    quiz: [{ q: "Quale vinificatore tedesco della Nahe produce il Poet’s Leap Riesling?", a: "Armin Diel", x: ["Ernst Loosen", "Egon Müller", "Helmut Dönnhoff"] }],
+  },
+  us2_doubleback: {
+    fact: "Cantina fondata nella natia Walla Walla da una star dello sport dopo il ritiro, Drew Bledsoe. Chris Figgins di Leonetti ne ha guidato le prime vinificazioni.",
+    quiz: [
+      { q: "Qual era la professione di Drew Bledsoe, fondatore di Doubleback?", a: "Quarterback della NFL", x: ["Cestista della NBA", "Lanciatore della Major League", "Golfista professionista"] },
+      { q: "Quale significato ha il nome Doubleback?", a: "Il ritorno a casa", x: ["Due affinamenti", "L’assemblaggio di due vigneti", "Uno schema del football americano"] },
+    ],
+  },
+  us2_wiemer_dry_riesling: {
+    fact: "Grande nome del Riesling dei Finger Lakes, fondato nel 1979 sulle rive del lago Seneca da Hermann J. Wiemer, originario di Bernkastel, sulla Mosella.",
+    quiz: [{ q: "Quale attività ha gestito Hermann J. Wiemer accanto alla cantina?", a: "Un vivaio di barbatelle innestate di vitigni europei", x: ["Un caseificio", "Una sidreria", "Una bottaia"] }],
+  },
+  us2_drfrank_rkatsiteli: {
+    fact: "Bianco prodotto dal dottor Konstantin Frank con un vitigno resistente al freddo dell’ex area sovietica, portato nei Finger Lakes.",
+    quiz: [{ q: "Qual è il paese d’origine del Rkatsiteli piantato dal dottor Frank nei Finger Lakes?", a: "Georgia", x: ["Armenia", "Grecia", "Bulgaria"] }],
+  },
+  us2_wolffer_rose: {
+    fact: "Rosé della cantina fondata nel 1988 negli Hamptons, a Long Island, dall’amburghese Christian Wölffer. È quasi un simbolo delle vacanze estive dei newyorkesi.",
+    quiz: [{ q: "Quale nuovo rosé ha lanciato Wölffer Estate sull’onda del successo del rosé?", a: "Summer in a Bottle", x: ["Whispering Angel", "Miraval", "Hampton Water"] }],
+  },
+  us2_bedell_merlot: {
+    fact: "Cantina della North Fork di Long Island. Il suo Merlot 2009 fu servito al pranzo per l’insediamento presidenziale del 2013, primo vino di New York a comparire a un insediamento.",
+    quiz: [{ q: "Qual è il film più celebre di New Line Cinema, la casa guidata da Michael Lynne, che acquistò Bedell Cellars nel 2000?", a: "Il Signore degli Anelli", x: ["Harry Potter", "Guerre stellari", "Il padrino"] }],
+  },
+  us2_barboursville_octagon: {
+    fact: "Cantina della Virginia fondata nel 1976 dalla famiglia italiana Zonin. Nella tenuta restano le rovine della villa di un governatore, progettata da Thomas Jefferson.",
+    quiz: [{ q: "Da dove viene il nome Octagon (ottagono)?", a: "Dalla stanza ottagonale della villa progettata da Jefferson", x: ["Da una botte ottagonale", "Da un assemblaggio di otto vitigni", "Da un vigneto di otto parcelle"] }],
+  },
+  us2_rdv_lostmountain: {
+    fact: "Fondata dall’ex marine Rutger de Vink su una collina granitica ai piedi delle Blue Ridge, in Virginia, con la prima annata nel 2008. Di recente è stata venduta alla famiglia proprietaria di Château Montrose.",
+    quiz: [{ q: "Che cos’è il nome RdV?", a: "Le iniziali del fondatore e l’abbreviazione di «rendez-vous»", x: ["Una sigla francese per «rosso della Virginia»", "Le coordinate del vigneto", "Il nome di un fiume vicino"] }],
+  },
+  us2_early_mountain_pm: {
+    fact: "Cantina fondata nel 2012 ai piedi delle Blue Ridge, in Virginia, da una coppia di imprenditori di internet. Punta molto sul Petit Manseng, il bianco di bandiera della Virginia.",
+    quiz: [{ q: "Quale società internet ha cofondato Steve Case, fondatore di Early Mountain?", a: "AOL", x: ["Yahoo", "Netscape", "eBay"] }],
+  },
+  us2_gruet_brut: {
+    fact: "Casa di spumanti fondata da una famiglia francese della Champagne, che nel 1984 acquistò terreni sugli altopiani del New Mexico. Segue lo stesso metodo dello champagne.",
+    quiz: [{ q: "In quale zona francese produceva vino in origine la famiglia Gruet?", a: "Champagne", x: ["Alsazia", "Borgogna", "Loira"] }],
+  },
+  us2_missionhill_reserve_chard: {
+    fact: "Cantina su una collina affacciata sul lago Okanagan. È famosa per l’edificio che ricorda un monastero e l’alto campanile.",
+    quiz: [{ q: "Quale premio vinse lo Chardonnay Mission Hill 1992 all’International Wine & Spirit Competition (IWSC) di Londra del 1994?", a: "Il trofeo per il miglior Chardonnay del mondo", x: ["Il premio per il miglior icewine", "Il premio per il miglior spumante", "Il premio per il miglior assemblaggio rosso"] }],
+  },
+  us2_burrowing_owl_merlot: {
+    fact: "Cantina fondata da Jim Wyse nella zona desertica a sud dell’Okanagan. Prende il nome dalla civetta delle tane, in via di scomparsa nella zona.",
+    quiz: [{ q: "Che cosa fa Burrowing Owl con il costo delle degustazioni?", a: "Lo dona a un’associazione per la protezione della civetta delle tane", x: ["Lo usa per borse di studio dei lavoratori della vigna", "Lo usa per comprare botti", "Lo dona ai vigili del fuoco locali"] }],
+  },
+  us2_quails_gate_foch: {
+    fact: "Cantina della famiglia Stewart, che coltiva la terra a West Kelowna dal 1908. Con vecchie viti piantate negli anni ’60 produce un rosso intenso.",
+    quiz: [{ q: "In onore di chi fu chiamato il vitigno «Maréchal Foch»?", a: "Ferdinand Foch, comandante supremo alleato nella Prima guerra mondiale", x: ["Napoleone Bonaparte", "Il marchese di La Fayette", "Charles de Gaulle"] }],
+  },
+  us2_osoyoos_larose: {
+    fact: "Cantina in stile bordolese fondata nel 1998 sul lago Osoyoos dal gruppo bordolese Taillan e dalla canadese Vincor. Oggi appartiene al solo gruppo Taillan.",
+    quiz: [{ q: "Da quale château bordolese del gruppo Taillan viene il «Larose» di Osoyoos Larose?", a: "Château Gruaud Larose", x: ["Château Latour", "Château Lagrange", "Château Lafon-Rochet"] }],
+  },
+  us2_nkmip_syrah: {
+    fact: "Cantina di Osoyoos, nella zona desertica del Canada. Nk’Mip in lingua nativa significa «terra bassa».",
+    quiz: [{ q: "Quale primato detiene Nk’Mip Cellars?", a: "È la prima cantina del Nord America di proprietà di una comunità nativa", x: ["Il primo icewine del Canada", "La prima certificazione biologica del Canada", "La prima casa di spumanti del Nord America"] }],
+  },
+  us2_summerhill_cipes: {
+    fact: "Lo spumante simbolo della cantina biologica fondata a Kelowna nel 1986 dalla famiglia Cipes. A base di Riesling, rifermenta in bottiglia.",
+    quiz: [{ q: "Che cosa fa Summerhill Pyramid Winery nella piramide costruita a imitazione della Grande Piramide di Giza?", a: "Vi fa affinare il vino", x: ["Vi organizza le degustazioni", "Vi fa appassire l’uva", "Vi costruisce le botti"] }],
+  },
+  us2_clos_jordanne: {
+    fact: "Cantina del Niagara nata dalla collaborazione tra il borgognone Boisset e la canadese Vincor. L’annata 2005 vinse il «Giudizio di Montréal» del 2009, battendo grandi vini di Borgogna e California.",
+    quiz: [{ q: "Quale architetto progettò la cantina di Le Clos Jordanne, rimasta poi mai costruita?", a: "Frank Gehry", x: ["Renzo Piano", "Tadao Ando", "Zaha Hadid"] }],
+  },
+  us2_peller_ice_cuvee: {
+    fact: "Spumante del Niagara prodotto con il metodo champenoise. Nell’ultima fase si aggiunge un ingrediente tipicamente canadese che gli dà una dolcezza delicata.",
+    quiz: [{ q: "Che cosa si aggiunge al dosaggio finale della Ice Cuvée?", a: "Icewine di Vidal", x: ["Sciroppo d’acero", "Miele", "Brandy di mele"] }],
+  },
+  us2_gretzky_cab_merlot: {
+    fact: "Assemblaggio rosso della cantina e distilleria di whisky fondata a Niagara-on-the-Lake dalla leggenda dell’hockey su ghiaccio Wayne Gretzky.",
+    quiz: [{ q: "Quale numero di maglia, che portava da giocatore, compare spesso sui vini Wayne Gretzky?", a: "99", x: ["66", "87", "9"] }],
+  },
 };
 
 export default T;
