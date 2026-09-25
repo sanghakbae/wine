@@ -305,6 +305,12 @@ export function radiusAt(wall: Pt[], y: number): number {
   return wall[wall.length - 1][0];
 }
 
+let profileStep = 0.22;
+/** 윤곽 보간 간격(cm). 기기 성능에 맞춰 무대가 한 번 정한다 */
+export function setProfileStep(step: number) {
+  profileStep = step;
+}
+
 /** 제어점 사이를 구심(centripetal) Catmull-Rom 으로 메워 매끈한 윤곽을 만든다. 간격이 고르지 않아도 튀지 않는다. */
 export function smooth(pts: Pt[]): Pt[] {
   const out: Pt[] = [];
@@ -319,7 +325,7 @@ export function smooth(pts: Pt[]): Pt[] {
     const t1 = t0 + knot(p0, p1);
     const t2 = t1 + knot(p1, p2);
     const t3 = t2 + knot(p2, p3);
-    const per = Math.min(10, Math.max(1, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / 0.22)));
+    const per = Math.min(10, Math.max(1, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / profileStep)));
     for (let s = 0; s < per; s++) {
       const t = t1 + ((t2 - t1) * s) / per;
       const lerp = (a: Pt, b: Pt, ta: number, tb: number): Pt => {

@@ -1,4 +1,4 @@
-// 언어 선택: 저장된 선택 → 브라우저 언어 → 시간대(접속 지역) → 영어
+// 언어 선택: 접속한 위치(기기 시간대) → 브라우저 언어 → 영어. 화면에서 고르는 기능은 없다.
 import { UI, LANG_NAMES, type Dict, type Lang, type UIKey } from "./ui";
 import { GRAPE_EN, REGION_EN, grapeLabel } from "../data/lang";
 import { regionOf, type Trivia, type Wine, type WineType } from "../data/wines";
@@ -7,7 +7,6 @@ import type { FamilyId } from "../bottle/shapes";
 export type { Lang, UIKey };
 export { LANG_NAMES };
 
-const KEY = "blind-bottle:lang";
 const SUPPORTED = Object.keys(UI) as Lang[];
 
 const TZ: [RegExp, Lang][] = [
@@ -23,17 +22,17 @@ const TZ: [RegExp, Lang][] = [
 
 function detect(): Lang {
   try {
-    const saved = localStorage.getItem(KEY) as Lang | null;
-    if (saved && SUPPORTED.includes(saved)) return saved;
+    // 예전 버전이 남긴 수동 선택은 쓰지 않는다
+    localStorage.removeItem("blind-bottle:lang");
   } catch {
-    // 저장소를 못 쓰면 감지로 넘어간다
+    // 무시
   }
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+  for (const [re, l] of TZ) if (re.test(tz)) return l;
   for (const l of navigator.languages ?? [navigator.language]) {
     const code = l.toLowerCase().split("-")[0] as Lang;
     if (SUPPORTED.includes(code)) return code;
   }
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
-  for (const [re, l] of TZ) if (re.test(tz)) return l;
   return "en";
 }
 
@@ -42,14 +41,10 @@ document.documentElement.lang = current;
 
 export const lang = () => current;
 
+/** 점검용으로만 쓴다 (화면에는 언어를 고르는 곳이 없다) */
 export function setLang(l: Lang) {
   current = l;
   document.documentElement.lang = l;
-  try {
-    localStorage.setItem(KEY, l);
-  } catch {
-    // 무시
-  }
 }
 
 export function t(key: UIKey, vars?: Record<string, string | number>): string {

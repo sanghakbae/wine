@@ -47,8 +47,15 @@ export function onUser(f: (u: User | null) => void) {
   return () => listeners.delete(f);
 }
 
+/** 리다이렉트 로그인은 페이지를 새로 불러오므로, 떠나기 직전에 손님 기록을 잠깐 맡겨 둘 곳 */
+let beforeRedirect: (() => void) | null = null;
+export function onBeforeRedirect(f: () => void) {
+  beforeRedirect = f;
+}
+
 export async function signIn() {
   const { auth, fa } = await init();
+  auth.languageCode = document.documentElement.lang || "ko";
   const provider = new fa.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
   try {
@@ -56,8 +63,10 @@ export async function signIn() {
   } catch (e) {
     const code = (e as { code?: string }).code ?? "";
     // 팝업을 막는 환경(일부 인앱 브라우저·홈 화면 앱)에서는 리다이렉트로
-    if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") await fa.signInWithRedirect(auth, provider);
-    else if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") throw e;
+    if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
+      beforeRedirect?.();
+      await fa.signInWithRedirect(auth, provider);
+    } else if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") throw e;
   }
 }
 

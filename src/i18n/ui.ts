@@ -3,9 +3,18 @@
 export type Lang = "ko" | "en" | "ja" | "zh" | "es" | "fr" | "de" | "it" | "pt";
 
 const ko = {
+  hint_title: "💡 힌트",
+  hint_cost: "누를 때마다 −{n}점",
+  hb_country: "국가 보기",
+  hb_region: "산지 보기",
+  hb_grape: "품종 보기",
+  hb_initial: "첫 글자 보기",
+  hb_type: "종류 보기",
+  guest_toast: "손님 모드 — 이번 기록은 저장되지 않아요",
+  login_fail: "로그인하지 못했어요. 잠시 후 다시 시도해 주세요.",
   start_now: "시작하기",
   login_google: "Google로 로그인",
-  login_save_note: "로그인하지 않으면 기록이 저장되지 않아요",
+  login_save_note: "시작하기로 하면 기록이 저장되지 않아요 · 저장하려면 Google로 로그인하세요",
   saved_note: "기록이 저장되고 있어요",
   logout: "로그아웃",
   delete_account: "계정 삭제",
@@ -127,9 +136,18 @@ export type UIKey = keyof typeof ko;
 export type Dict = Record<UIKey, string>;
 
 const en: Dict = {
+  hint_title: "💡 Hints",
+  hint_cost: "−{n} pts each",
+  hb_country: "Show country",
+  hb_region: "Show region",
+  hb_grape: "Show grape",
+  hb_initial: "Show first letter",
+  hb_type: "Show style",
+  guest_toast: "Guest mode — this game won’t be saved",
+  login_fail: "Couldn’t sign in. Please try again later.",
   start_now: "Start",
   login_google: "Sign in with Google",
-  login_save_note: "Scores aren’t saved unless you sign in",
+  login_save_note: "Start plays without saving · Sign in with Google to keep your progress",
   saved_note: "Your progress is being saved",
   logout: "Sign out",
   delete_account: "Delete account",
@@ -248,9 +266,18 @@ const en: Dict = {
 };
 
 const ja: Dict = {
+  hint_title: "💡 ヒント",
+  hint_cost: "1回ごとに −{n}点",
+  hb_country: "国を見る",
+  hb_region: "産地を見る",
+  hb_grape: "品種を見る",
+  hb_initial: "頭文字を見る",
+  hb_type: "タイプを見る",
+  guest_toast: "ゲストモード — 今回の記録は保存されません",
+  login_fail: "ログインできませんでした。しばらくしてからもう一度お試しください。",
   start_now: "はじめる",
   login_google: "Googleでログイン",
-  login_save_note: "ログインしないと記録は保存されません",
+  login_save_note: "「はじめる」では記録が保存されません · 保存するにはGoogleでログイン",
   saved_note: "記録を保存しています",
   logout: "ログアウト",
   delete_account: "アカウント削除",
@@ -369,9 +396,18 @@ const ja: Dict = {
 };
 
 const zh: Dict = {
+  hint_title: "💡 提示",
+  hint_cost: "每次 −{n}分",
+  hb_country: "看国家",
+  hb_region: "看产区",
+  hb_grape: "看品种",
+  hb_initial: "看首字母",
+  hb_type: "看类型",
+  guest_toast: "游客模式 — 本局记录不会保存",
+  login_fail: "登录失败，请稍后再试。",
   start_now: "开始",
   login_google: "使用 Google 登录",
-  login_save_note: "不登录的话不会保存记录",
+  login_save_note: "直接开始不会保存记录 · 登录 Google 即可保存",
   saved_note: "正在保存你的记录",
   logout: "退出登录",
   delete_account: "删除账号",
@@ -490,9 +526,18 @@ const zh: Dict = {
 };
 
 const es: Dict = {
+  hint_title: "💡 Pistas",
+  hint_cost: "−{n} pts cada una",
+  hb_country: "Ver país",
+  hb_region: "Ver región",
+  hb_grape: "Ver uva",
+  hb_initial: "Ver inicial",
+  hb_type: "Ver tipo",
+  guest_toast: "Modo invitado: esta partida no se guardará",
+  login_fail: "No se pudo iniciar sesión. Inténtalo de nuevo más tarde.",
   start_now: "Empezar",
   login_google: "Iniciar sesión con Google",
-  login_save_note: "Sin iniciar sesión no se guarda tu progreso",
+  login_save_note: "Con «Empezar» no se guarda tu progreso · Inicia sesión con Google para guardarlo",
   saved_note: "Tu progreso se está guardando",
   logout: "Cerrar sesión",
   delete_account: "Eliminar cuenta",
@@ -611,9 +656,18 @@ const es: Dict = {
 };
 
 const fr: Dict = {
+  hint_title: "💡 Indices",
+  hint_cost: "−{n} pts chacun",
+  hb_country: "Voir le pays",
+  hb_region: "Voir la région",
+  hb_grape: "Voir le cépage",
+  hb_initial: "Voir l’initiale",
+  hb_type: "Voir le type",
+  guest_toast: "Mode invité : cette partie ne sera pas enregistrée",
+  login_fail: "Connexion impossible. Réessayez plus tard.",
   start_now: "Commencer",
   login_google: "Se connecter avec Google",
-  login_save_note: "Sans connexion, vos scores ne sont pas enregistrés",
+  login_save_note: "« Commencer » n’enregistre rien · Connectez-vous avec Google pour garder vos scores",
   saved_note: "Votre progression est enregistrée",
   logout: "Se déconnecter",
   delete_account: "Supprimer le compte",
@@ -732,9 +786,18 @@ const fr: Dict = {
 };
 
 const de: Dict = {
+  hint_title: "💡 Tipps",
+  hint_cost: "je −{n} Pkt.",
+  hb_country: "Land zeigen",
+  hb_region: "Region zeigen",
+  hb_grape: "Rebsorte zeigen",
+  hb_initial: "Anfangsbuchstaben zeigen",
+  hb_type: "Typ zeigen",
+  guest_toast: "Gastmodus – dieses Spiel wird nicht gespeichert",
+  login_fail: "Anmeldung fehlgeschlagen. Bitte später erneut versuchen.",
   start_now: "Los geht’s",
   login_google: "Mit Google anmelden",
-  login_save_note: "Ohne Anmeldung wird nichts gespeichert",
+  login_save_note: "„Los geht’s“ speichert nichts · Mit Google anmelden, um den Fortschritt zu sichern",
   saved_note: "Dein Fortschritt wird gespeichert",
   logout: "Abmelden",
   delete_account: "Konto löschen",
@@ -853,9 +916,18 @@ const de: Dict = {
 };
 
 const it: Dict = {
+  hint_title: "💡 Indizi",
+  hint_cost: "−{n} pt ciascuno",
+  hb_country: "Vedi paese",
+  hb_region: "Vedi zona",
+  hb_grape: "Vedi vitigno",
+  hb_initial: "Vedi iniziale",
+  hb_type: "Vedi tipologia",
+  guest_toast: "Modalità ospite: questa partita non verrà salvata",
+  login_fail: "Accesso non riuscito. Riprova più tardi.",
   start_now: "Inizia",
   login_google: "Accedi con Google",
-  login_save_note: "Senza accesso i punteggi non vengono salvati",
+  login_save_note: "Con «Inizia» non si salva nulla · Accedi con Google per salvare i progressi",
   saved_note: "I tuoi progressi vengono salvati",
   logout: "Esci",
   delete_account: "Elimina account",
@@ -974,9 +1046,18 @@ const it: Dict = {
 };
 
 const pt: Dict = {
+  hint_title: "💡 Dicas",
+  hint_cost: "−{n} pts cada",
+  hb_country: "Ver país",
+  hb_region: "Ver região",
+  hb_grape: "Ver casta",
+  hb_initial: "Ver inicial",
+  hb_type: "Ver tipo",
+  guest_toast: "Modo convidado: esta partida não será salva",
+  login_fail: "Não foi possível entrar. Tente novamente mais tarde.",
   start_now: "Começar",
   login_google: "Entrar com o Google",
-  login_save_note: "Sem entrar, seus pontos não são salvos",
+  login_save_note: "“Começar” não salva nada · Entre com o Google para guardar seu progresso",
   saved_note: "Seu progresso está sendo salvo",
   logout: "Sair",
   delete_account: "Excluir conta",

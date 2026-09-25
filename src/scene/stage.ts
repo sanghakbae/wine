@@ -3,6 +3,8 @@ import type { Wine } from "../data/wines";
 import type { Hide } from "../label/painter";
 import { buildBottle, type BuiltBottle } from "../bottle/build";
 import { Pedestal } from "./pedestal";
+import { QUALITY } from "./quality";
+import { setProfileStep } from "../bottle/shapes";
 
 // 무대: 회전 받침대 위의 병 한 병. 병을 돌리고(드래그), 카메라는 살짝 위아래로만 움직인다.
 
@@ -80,13 +82,22 @@ export class Stage {
   topInset = 0;
   /** 넓은 화면에서 오른쪽 패널 폭(px) */
   rightInset = 0;
-  private timer = new THREE.Timer();
+  /** 셀러·랭킹처럼 화면을 덮는 창이 열려 있으면 그리지 않는다 */
+  paused = false;
+  private dpr = 1;
+  private maxDpr = 1;
+  private lastFrame = 0;
+  private slowFrames = 0;
+  private fastFrames = 0;
 
   constructor(private host: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    // 터치 기기(폰·태블릿)는 발열·배터리를 생각해 해상도 상한을 조금 낮춘다
-    const lowPower = matchMedia("(pointer: coarse)").matches;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPower ? 1.75 : 2));
+    // 기기 성능에 맞춰 해상도·투과 패스·병 윤곽 조밀도를 정한다 (quality.ts)
+    setProfileStep(QUALITY.profileStep);
+    this.maxDpr = Math.min(window.devicePixelRatio, QUALITY.maxDpr);
+    this.dpr = this.maxDpr;
+    this.renderer.setPixelRatio(this.dpr);
+    this.renderer.transmissionResolutionScale = QUALITY.transmissionScale;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -100,7 +111,7 @@ export class Stage {
     this.backdrop = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), new THREE.MeshBasicMaterial({ map: backdropTexture(), toneMapped: false }));
     this.scene.add(this.backdrop);
 
-    this.pedestal = new Pedestal(lowPower);
+    this.pedestal = new Pedestal(QUALITY.texture);
     this.scene.add(this.pedestal.group);
 
     // 조명
@@ -122,8 +133,7 @@ export class Stage {
     this.bindInput();
     new ResizeObserver(() => this.resize()).observe(host);
     this.resize();
-    this.timer.connect(document);
-    this.renderer.setAnimationLoop(() => this.frame());
+    this.renderer.setAnimationLoop((now) => this.loop(now));
   }
 
   show(wine: Wine, hide: Hide, vintage: string | null = null) {
@@ -227,9 +237,50 @@ export class Stage {
     for (let t = 0; t < seconds; t += 1 / 30) this.frame(1 / 30);
   }
 
-  private frame(fixed?: number) {
-    this.timer.update();
-    const dt = fixed ?? Math.min(this.timer.getDelta(), 0.05);
+  /**
+   * 프레임 조절: 끌거나 움직이는 중에는 최대 60fps, 병이 혼자 천천히 돌 때는 30fps.
+   * (120Hz 화면에서 두 배로 그리지 않고, 가만히 있을 때 배터리를 아낀다)
+   */
+  private loop(now: number) {
+    if (this.paused) {
+      this.lastFrame = now;
+      return;
+    }
+    const active =
+      this.dragging || this.targetSpin !== null || this.enter < 1 || Math.abs(this.spinVel) > 0.002 || performance.now() - this.lastInteract < 2500;
+    const interval = active ? 1000 / 60 : 1000 / 30;
+    const since = now - this.lastFrame;
+    if (since < interval - 2) return;
+    this.lastFrame = now;
+    if (since < 250) this.adapt(since, interval);
+    this.frame(Math.min(since / 1000, 0.05));
+  }
+
+  /** 목표 프레임을 계속 못 맞추면 해상도를 낮추고, 한동안 여유가 있으면 다시 올린다 */
+  private adapt(since: number, interval: number) {
+    if (since > interval * 1.6 + 4) {
+      this.slowFrames++;
+      this.fastFrames = 0;
+    } else if (since < interval * 1.2) {
+      this.fastFrames++;
+      this.slowFrames = Math.max(0, this.slowFrames - 1);
+    }
+    if (this.slowFrames > 24 && this.dpr > 1) {
+      this.setDpr(this.dpr - 0.25);
+      this.slowFrames = 0;
+    } else if (this.fastFrames > 600 && this.dpr < this.maxDpr) {
+      this.setDpr(this.dpr + 0.25);
+      this.fastFrames = 0;
+    }
+  }
+
+  private setDpr(v: number) {
+    this.dpr = Math.min(this.maxDpr, Math.max(1, v));
+    this.renderer.setPixelRatio(this.dpr);
+    this.resize();
+  }
+
+  private frame(dt: number) {
     const now = performance.now();
     if (!this.dragging) {
       if (this.targetSpin !== null) {

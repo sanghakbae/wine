@@ -5,8 +5,10 @@ import { designFor } from "../label/designs/index";
 import { glassMaterials, liquidMaterial, GLASS } from "./materials";
 import { SHAPES, insetProfile, radiusAt, smooth, wallOf, type Pt, type ShapeDef } from "./shapes";
 
-const SEG = 128;
-const PX_PER_CM = 88;
+import { QUALITY } from "../scene/quality";
+
+const SEG = QUALITY.seg;
+const PX_PER_CM = QUALITY.pxPerCm;
 
 const v2 = (pts: Pt[]) => pts.map(([r, y]) => new THREE.Vector2(r, y));
 
@@ -216,7 +218,7 @@ export function buildBottle(wine: Wine, hide: Hide, vintage: string | null): Bui
 
   // 와인
   if (!GLASS[wine.glass].opaque) {
-    const liqGeo = track(new THREE.LatheGeometry(v2(insetProfile(def, 0.36)), 72));
+    const liqGeo = track(new THREE.LatheGeometry(v2(insetProfile(def, 0.36)), QUALITY.liquidSeg));
     flatten(liqGeo, def);
     group.add(new THREE.Mesh(liqGeo, track(liquidMaterial(wine.liquid))));
   }

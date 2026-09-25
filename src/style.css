@@ -250,3 +250,74 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 .foot a { color: var(--muted); text-underline-offset: 3px; }
 .foot a:hover { color: var(--text); }
 .rank-login { display: flex; flex-direction: column; gap: 4px; }
+
+/* 시작하기 · Google 로그인을 한 줄에 나란히 */
+.start-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.start-row .gbtn { width: auto; }
+.start-row .cta, .start-row .gbtn { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 360px) { .start-row .gbtn span { font-size: 12.5px; } }
+
+/* 잠깐 뜨는 안내 */
+.toast { position: fixed; z-index: 20; left: 50%; top: calc(env(safe-area-inset-top) + 56px); transform: translateX(-50%); max-width: calc(100% - 32px); padding: 4.5px 10px; border-radius: 6px; background: rgba(28,18,16,0.92); border: 1px solid rgba(217,181,106,0.45); color: var(--gold); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 0.4s, transform 0.4s; }
+.toast.out { opacity: 0; transform: translate(-50%, -6px); }
+
+/* ───────── 큰 PC 화면: 패널과 글자를 화면에 맞춰 키운다 (안쪽 여백은 그대로 촘촘하게) */
+@media (min-width: 1200px) {
+  .panel:not(.landing) { width: clamp(440px, 32vw, 580px); gap: 12px; padding: 16px 18px; }
+  .hud { font-size: 15px; }
+  .hud-round, .hud-mid { font-size: 15px; }
+  .hud-lvl { font-size: 13px; }
+  .hud-score b { font-size: 22px; }
+  .qline { font-size: 20px; }
+  .qhead .chip { font-size: 12px; }
+  .opt { min-height: 54px; gap: 8px; }
+  .opt .t { font-size: 16px; }
+  .opt small { font-size: 12.5px; }
+  .opt .k { width: 22px; height: 22px; font-size: 12px; }
+  .hints, .hint, .hint.used { font-size: 13px; }
+  .verdict { font-size: 18px; }
+  .detail { padding: 10px 12px; gap: 8px; }
+  .dname b { font-size: 18px; }
+  .dname small { font-size: 13px; }
+  .detail dl { font-size: 14px; gap: 3px 12px; }
+  .fact { font-size: 14.5px; }
+  .rate, .note { font-size: 13px; }
+  .big { font-size: 48px; }
+  .res-list b { font-size: 15px; }
+  .panel .primary, .panel button { font-size: 15px; }
+  .panel.landing { width: min(560px, calc(100% - 32px)); }
+  .level b { font-size: 15px; }
+  .level span { font-size: 12px; }
+}
+@media (min-width: 1600px) {
+  .panel:not(.landing) { width: clamp(520px, 34vw, 660px); }
+  .qline { font-size: 22px; }
+  .opt { min-height: 60px; }
+  .opt .t { font-size: 18px; }
+  .opt small { font-size: 13.5px; }
+  .fact { font-size: 15.5px; }
+  .detail dl { font-size: 15px; }
+}
+
+/* ───────── 힌트: 잘 보이게 */
+.hints { gap: 6px; padding: 6px 8px; border: 1px dashed rgba(217,181,106,0.5); border-radius: 6px; background: rgba(217,181,106,0.07); color: var(--text); font-size: 13px; }
+.hints-title { color: var(--gold); font-weight: 700; white-space: nowrap; }
+.hint { font-size: 13px; font-weight: 600; color: var(--text); border: 1px solid rgba(217,181,106,0.55); background: rgba(255,255,255,0.07); border-radius: 4px; padding: 3px 6.5px; }
+.hint:hover:not(:disabled) { background: rgba(217,181,106,0.18); }
+.hint.used { border: 1px solid var(--gold); background: rgba(217,181,106,0.2); color: var(--text); font-weight: 500; }
+.hint.used b { color: #f3d98a; }
+@media (min-width: 1200px) { .hints, .hint, .hint.used { font-size: 14px; } }
+
+/* 힌트 상자: 제목·감점 안내 한 줄 + "○○ 보기" 버튼 */
+.hints { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.hints-head { display: flex; align-items: baseline; gap: 8px; }
+.hints-head b { color: var(--gold); font-size: 14px; }
+.hints-head small { color: var(--muted); font-size: 12px; }
+.hints-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+@media (min-width: 1200px) { .hints-head b { font-size: 15px; } .hints-head small { font-size: 13px; } }
+.cel-more { grid-column: 1 / -1; height: 1px; }
+
+/* Google 로그인 버튼: 구글 가이드 다크 테마 (배경 #131314, 테두리 #8E918F, 글자 #E3E3E3) */
+.gbtn { background: #131314; color: #e3e3e3; border: 1px solid #8e918f; border-radius: 4px; font-family: "Roboto", "Pretendard", -apple-system, "Apple SD Gothic Neo", sans-serif; font-weight: 500; letter-spacing: 0.01em; }
+.gbtn:hover { background: #1f1f20; border-color: #a8aaa8; }
+.gbtn svg { flex: none; }

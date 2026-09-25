@@ -17,22 +17,19 @@ import {
 } from "../game/quiz";
 import { store } from "../game/store";
 import {
-  LANG_NAMES,
   countryName,
   factOf,
   familyAbout,
   familyName,
   grapeName,
   lang,
-  loadWineTexts,
   originalFull,
   producerOf,
   regionName,
-  setLang,
   t,
   typeName,
   wineName,
-  type Lang,
+  type UIKey,
 } from "../i18n";
 import type { Stage } from "../scene/stage";
 import type { Music } from "../audio/music";
@@ -42,9 +39,9 @@ import { currentUser, deleteAccount, onUser, signIn, signOut } from "../auth";
 import { track } from "../analytics";
 import { cloudEnabled, deleteMyData, recordAnswer, saveNick, savedNick, submitScore, topScores, wineRate } from "../cloud";
 
-/** Google 로그인 버튼 (구글 브랜드 가이드의 흰 버튼 + G 로고) */
+/** Google 로그인 버튼 — 구글 브랜드 가이드의 공식 G 로고, 다크 테마 */
 const GOOGLE_BTN = (label: string) =>
-  `<button class="gbtn" data-act="login"><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>${label}</span></button>`;
+  `<button class="gbtn" data-act="login"><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>${label}</span></button>`;
 
 /** style.css 의 오른쪽 기둥 레이아웃 조건과 같아야 한다 */
 const SIDE_QUERY = "(min-width: 900px), (orientation: landscape) and (max-height: 520px)";
@@ -116,6 +113,8 @@ export class App {
     });
     store.onChange(() => this.view === "landing" && this.renderLanding());
     this.renderSound();
+    // 셀러·랭킹 창이 화면을 덮고 있는 동안에는 뒤의 3D 를 그리지 않는다
+    new MutationObserver(() => (this.stage.paused = !this.cellar.hidden)).observe(this.cellar, { attributes: true, attributeFilter: ["hidden"] });
     new ResizeObserver(() => this.syncInsets()).observe(this.panel);
     new ResizeObserver(() => this.syncInsets()).observe(this.hud);
     new ResizeObserver(() => this.syncInsets()).observe(this.hero);
@@ -161,15 +160,48 @@ export class App {
     this.hero.hidden = false;
     this.vignette.hidden = false;
     document.title = `${t("appName")} — Wine Quiz`;
-    const spin = () => {
-      const pool = WINES.filter((w) => w.tier <= 2);
-      const w = pool[Math.floor(Math.random() * pool.length)];
-      this.stage.show(w, { name: true, info: true }, pickVintage(w));
-    };
-    spin();
-    clearInterval(this.titleTimer);
-    this.titleTimer = window.setInterval(spin, 7000);
+    this.spinLanding();
+    this.startLandingTimer();
     this.renderLanding();
+  }
+
+  /** 화면 위쪽에 잠깐 떴다 사라지는 안내 */
+  private toast(msg: string) {
+    document.querySelector(".toast")?.remove();
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.setAttribute("role", "status");
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.classList.add("out"), 2800);
+    setTimeout(() => el.remove(), 3300);
+  }
+
+  /** Google 로그인. 실패하면(도메인 미승인·네트워크 등) 알려 준다 */
+  private async login() {
+    try {
+      await signIn();
+    } catch {
+      alert(t("login_fail"));
+    }
+  }
+
+  /** 랜딩 뒤에서 도는 병을 다른 와인으로 바꾼다 */
+  private spinLanding() {
+    const pool = WINES.filter((w) => w.tier <= 2);
+    const w = pool[Math.floor(Math.random() * pool.length)];
+    this.stage.show(w, { name: true, info: true }, pickVintage(w));
+  }
+
+  private startLandingTimer() {
+    clearInterval(this.titleTimer);
+    this.titleTimer = window.setInterval(() => this.spinLanding(), 7000);
+  }
+
+  /** 셀러·랭킹 창 닫기: 랜딩 위에서 열었으면 병을 바꾸지 않고 타이머만 다시 돌린다 */
+  private closeOverlay() {
+    this.cellar.hidden = true;
+    if (this.view === "landing") this.startLandingTimer();
   }
 
   private renderLanding() {
@@ -193,12 +225,15 @@ export class App {
           )
           .join("")}
       </div>
-      <button class="primary cta" data-act="start">${t("start_now")}</button>
       ${
-        cloudEnabled
-          ? user
-            ? `<div class="me">${user.photo ? `<img src="${esc(user.photo)}" alt="" referrerpolicy="no-referrer">` : ""}<span><b>${esc(user.name)}</b><small>${t("saved_note")}</small></span><button class="link" data-act="logout">${t("logout")}</button></div>`
-            : `${GOOGLE_BTN(t("login_google"))}<p class="save-note">${t("login_save_note")}</p>`
+        cloudEnabled && !user
+          ? `<div class="start-row"><button class="primary cta" data-act="start">${t("start_now")}</button>${GOOGLE_BTN(t("login_google"))}</div>
+             <p class="save-note">${t("login_save_note")}</p>`
+          : `<button class="primary cta" data-act="start">${t("start_now")}</button>`
+      }
+      ${
+        cloudEnabled && user
+          ? `<div class="me">${user.photo ? `<img src="${esc(user.photo)}" alt="" referrerpolicy="no-referrer">` : ""}<span><b>${esc(user.name)}</b><small>${t("saved_note")}</small></span><button class="link" data-act="logout">${t("logout")}</button></div>`
           : ""
       }
       <nav class="links">
@@ -208,17 +243,8 @@ export class App {
         ${cloudEnabled && user ? `<button class="link danger" data-act="delete">${t("delete_account")}</button>` : ""}
       </nav>
       <footer class="foot">
-        <label class="lang">🌐 <select aria-label="${t("langLabel")}">${(Object.keys(LANG_NAMES) as Lang[])
-          .map((l) => `<option value="${l}" ${l === lang() ? "selected" : ""}>${LANG_NAMES[l]}</option>`)
-          .join("")}</select></label>
         <a href="privacy.html" target="_blank" rel="noopener">${t("privacy")}</a>
       </footer>`;
-    this.panel.querySelector<HTMLSelectElement>(".lang select")!.onchange = async (e) => {
-      setLang((e.target as HTMLSelectElement).value as Lang);
-      track("language_change", { lang: lang() });
-      await loadWineTexts();
-      this.renderLanding();
-    };
     this.panel.onclick = async (e) => {
       const el = (e.target as HTMLElement).closest<HTMLElement>("[data-level],[data-act]");
       if (!el) return;
@@ -240,13 +266,15 @@ export class App {
           return install();
         case "login":
           track("login_click", { where: "landing" });
-          return signIn().catch(() => null);
+          return this.login();
         case "logout":
+          await store.flush();
           return signOut();
         case "delete":
           if (!confirm(t("delete_confirm"))) return;
+          store.forget();
           await deleteMyData().catch(() => null);
-          await deleteAccount().catch(() => null);
+          await deleteAccount().catch(() => alert(t("login_fail")));
           track("account_delete");
           return;
       }
@@ -272,6 +300,7 @@ export class App {
     this.cellar.hidden = true;
     track("game_start", { level: mode.level, mode: mode.kind, lang: lang(), ...(mode.kind === "wine" ? { wine: mode.wine.id } : {}) });
     this.next();
+    if (cloudEnabled && !store.saving) this.toast(t("guest_toast"));
   }
 
   private next() {
@@ -318,9 +347,9 @@ export class App {
       </div>
       ${
         q.hints.length
-          ? `<div class="hints"><span>${t("hintCost", { n: cost })}</span>${q.hints
-              .map((h) => `<button class="hint" data-hint="${h}">${hintLabel(h)}</button>`)
-              .join("")}</div>`
+          ? `<div class="hints"><div class="hints-head"><b>${t("hint_title")}</b><small>${t("hint_cost", { n: cost })}</small></div><div class="hints-btns">${q.hints
+              .map((h) => `<button class="hint" data-hint="${h}">${t(`hb_${h}` as UIKey)}</button>`)
+              .join("")}</div></div>`
           : ""
       }
       <div class="after"></div>`;
@@ -469,7 +498,7 @@ export class App {
       }
       if (act === "login") {
         track("login_click", { where: "result" });
-        signIn().catch(() => null);
+        this.login();
         return;
       }
       if (act === "again") this.startGame(m.kind === "wine" ? { ...m, queue: wineQuiz(m.wine, m.level) } : m);
@@ -525,11 +554,7 @@ export class App {
       <ol class="rank-list"><li class="rank-note">…</li></ol>`;
     this.cellar.onclick = (e) => {
       const el = e.target as HTMLElement;
-      if (el.closest("[data-act=close]")) {
-        this.cellar.hidden = true;
-        if (this.hud.hidden && !this.panel.classList.contains("result")) this.showTitle();
-        return;
-      }
+      if (el.closest("[data-act=close]")) return this.closeOverlay();
       const tab = el.closest<HTMLElement>("[data-level]");
       if (tab) this.openRanking(tab.dataset.level as Level);
     };
@@ -570,9 +595,25 @@ export class App {
     const input = this.cellar.querySelector<HTMLInputElement>("input[type=search]")!;
     const sel = this.cellar.querySelector<HTMLSelectElement>("select")!;
     const onlyFound = this.cellar.querySelector<HTMLInputElement>("[data-f=found]")!;
+    // 1,285개를 한꺼번에 그리지 않고 150개씩, 스크롤이 끝에 닿으면 이어 붙인다
+    const BATCH = 150;
+    let list: Wine[] = [];
+    let shown = 0;
+    const item = (w: Wine) => {
+      const found = store.isFound(w.id);
+      return `<button class="cel-item ${found ? "" : "unknown"}" data-id="${w.id}">${bottleIcon(w, 52, found)}<span><b>${found ? esc(wineName(w)) : "???"}</b><small>${esc(countryName(w.country))} · ${esc(regionName(w).split(" · ")[0])}</small></span></button>`;
+    };
+    const sentinel = document.createElement("div");
+    sentinel.className = "cel-more";
+    const more = () => {
+      if (shown >= list.length) return;
+      sentinel.insertAdjacentHTML("beforebegin", list.slice(shown, shown + BATCH).map(item).join(""));
+      shown = Math.min(list.length, shown + BATCH);
+    };
+    const io = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && more(), { root: grid, rootMargin: "400px" });
     const draw = () => {
       const k = input.value.trim().toLowerCase();
-      const list = WINES.filter((w) => {
+      list = WINES.filter((w) => {
         if (sel.value && w.country !== sel.value) return false;
         const found = store.isFound(w.id);
         if (onlyFound.checked && !found) return false;
@@ -581,24 +622,23 @@ export class App {
         const hay = found ? `${wineName(w)} ${w.original} ${place} ${grapeName(w)}` : place;
         return hay.toLowerCase().includes(k);
       });
-      grid.innerHTML = list
-        .map((w) => {
-          const found = store.isFound(w.id);
-          return `<button class="cel-item ${found ? "" : "unknown"}" data-id="${w.id}">${bottleIcon(w, 52, found)}<span><b>${found ? esc(wineName(w)) : "???"}</b><small>${esc(countryName(w.country))} · ${esc(regionName(w).split(" · ")[0])}</small></span></button>`;
-        })
-        .join("");
+      shown = 0;
+      grid.replaceChildren(sentinel);
+      grid.scrollTop = 0;
+      more();
     };
     draw();
-    input.oninput = draw;
+    io.observe(sentinel);
+    let typing = 0;
+    input.oninput = () => {
+      clearTimeout(typing);
+      typing = window.setTimeout(draw, 160);
+    };
     sel.onchange = draw;
     onlyFound.onchange = draw;
     this.cellar.onclick = (e) => {
       const el = e.target as HTMLElement;
-      if (el.closest("[data-act=close]")) {
-        this.cellar.hidden = true;
-        if (this.hud.hidden && !this.panel.classList.contains("result")) this.showTitle();
-        return;
-      }
+      if (el.closest("[data-act=close]")) return this.closeOverlay();
       const item = el.closest<HTMLElement>("[data-id]");
       if (item) this.viewWine(WINES.find((w) => w.id === item.dataset.id)!);
     };
@@ -637,6 +677,7 @@ export class App {
   }
 
   private onKey(e: KeyboardEvent) {
+    if (!this.cellar.hidden && e.key === "Escape") return this.closeOverlay();
     if (!this.cellar.hidden || e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
     if (this.panel.classList.contains("play")) {
       const n = Number(e.key);

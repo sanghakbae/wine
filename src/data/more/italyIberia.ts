@@ -41,6 +41,7 @@ export const REGIONS: Record<string, string> = {
 };
 
 export const GRAPES: Record<string, string> = {
+  "포르투갈 토착 품종": "Portuguese native varieties",
   코르비노네: "Corvinone",
   론디넬라: "Rondinella",
   프리울라노: "Friulano",

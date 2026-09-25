@@ -1,7 +1,6 @@
 import * as THREE from "three";
-import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 
-// 받침대: 윤을 낸 검은 대리석 상판(병이 비친다) + 선반 가공한 월넛 받침 + 황동 띠
+// 받침대: 은은한 광택의 검은 대리석 상판 + 선반 가공한 월넛 받침 + 짙은 청동 띠
 
 /** 값 노이즈 (대리석 결·나뭇결용) */
 function makeNoise(seed: number) {
@@ -79,10 +78,10 @@ function marbleTextures(size = 1024) {
   return { map, roughMap };
 }
 
-function walnutTexture() {
+function walnutTexture(size = 512) {
   const noise = makeNoise(21);
-  const W = 1024;
-  const H = 256;
+  const W = size;
+  const H = size / 4;
   const c = document.createElement("canvas");
   c.width = W;
   c.height = H;
@@ -143,52 +142,24 @@ export const TOP_R = 11.2;
 export class Pedestal {
   readonly group = new THREE.Group();
   readonly shadow: THREE.Mesh;
-  private reflector: Reflector;
 
-  constructor(lowPower = false) {
-    const dpr = Math.min(window.devicePixelRatio, 2);
-    // 폰에서는 반사면을 반 해상도로 (병 밑이 살짝 비치는 정도라 티가 나지 않는다)
-    const refl = Math.round((lowPower ? 512 : 1024) * dpr * 0.6);
-
-    // 반사면 (대리석 밑에 깔고, 대리석을 반투명하게 얹어 은은하게 비치게 한다)
-    this.reflector = new Reflector(new THREE.CircleGeometry(TOP_R - 0.2, 96), {
-      textureWidth: refl,
-      textureHeight: refl,
-      color: new THREE.Color("#5a5a5a"),
-      clipBias: 0.003,
-    });
-    this.reflector.rotation.x = -Math.PI / 2;
-    this.reflector.position.y = -0.004;
-    this.group.add(this.reflector);
-
-    const { map, roughMap } = marbleTextures(lowPower ? 512 : 1024);
+  constructor(textureSize = 512) {
+    // 대리석 윗면: 반사 패스(장면을 한 번 더 그림)는 무거워서 빼고, 은은한 광택만 남긴다
+    const { map, roughMap } = marbleTextures(textureSize);
     const top = new THREE.Mesh(
-      new THREE.CircleGeometry(TOP_R - 0.2, 96),
+      new THREE.CircleGeometry(TOP_R - 0.2, 72),
       new THREE.MeshPhysicalMaterial({
         map,
         roughnessMap: roughMap,
         roughness: 1,
         metalness: 0,
-        clearcoat: 0.35,
-        clearcoatRoughness: 0.3,
-        transparent: true,
-        opacity: 0.88,
-        envMapIntensity: 0.35,
+        clearcoat: 0.45,
+        clearcoatRoughness: 0.25,
+        envMapIntensity: 0.4,
       }),
     );
     top.rotation.x = -Math.PI / 2;
-    top.renderOrder = 1;
     this.group.add(top);
-
-    // 반사 렌더 중에는 대리석 윗면·그림자를 숨긴다
-    const orig = this.reflector.onBeforeRender.bind(this.reflector);
-    this.reflector.onBeforeRender = (...args: Parameters<typeof orig>) => {
-      top.visible = false;
-      this.shadow.visible = false;
-      orig(...args);
-      top.visible = true;
-      this.shadow.visible = true;
-    };
 
     // 대리석 판 옆면 (둥글게 모서리를 깎은 판)
     const slabProfile = [
@@ -229,7 +200,7 @@ export class Pedestal {
       [TOP_R + 0.2, -6.05],
       [0, -6.05],
     ].map(([r, y]) => new THREE.Vector2(r, y));
-    const wood = walnutTexture();
+    const wood = walnutTexture(textureSize);
     wood.repeat.set(2, 1);
     const base = new THREE.Mesh(
       new THREE.LatheGeometry(baseProfile, 128),
