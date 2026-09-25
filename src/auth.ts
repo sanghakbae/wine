@@ -47,13 +47,17 @@ export function onUser(f: (u: User | null) => void) {
   return () => listeners.delete(f);
 }
 
-/** 리다이렉트 로그인은 페이지를 새로 불러오므로, 떠나기 직전에 손님 기록을 잠깐 맡겨 둘 곳 */
-let beforeRedirect: (() => void) | null = null;
-export function onBeforeRedirect(f: () => void) {
-  beforeRedirect = f;
+/** 카카오톡·인스타그램·페이스북·라인·네이버 앱 안의 브라우저: Google 이 로그인을 막는다 */
+export const inAppBrowser = () => /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|; wv\)/i.test(navigator.userAgent);
+
+export class LoginError extends Error {
+  constructor(readonly reason: "inapp" | "popup" | "other") {
+    super(reason);
+  }
 }
 
 export async function signIn() {
+  if (inAppBrowser()) throw new LoginError("inapp");
   const { auth, fa } = await init();
   auth.languageCode = document.documentElement.lang || "ko";
   const provider = new fa.GoogleAuthProvider();
@@ -62,11 +66,9 @@ export async function signIn() {
     await fa.signInWithPopup(auth, provider);
   } catch (e) {
     const code = (e as { code?: string }).code ?? "";
-    // 팝업을 막는 환경(일부 인앱 브라우저·홈 화면 앱)에서는 리다이렉트로
-    if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
-      beforeRedirect?.();
-      await fa.signInWithRedirect(auth, provider);
-    } else if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") throw e;
+    if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return;
+    if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") throw new LoginError("popup");
+    throw new LoginError("other");
   }
 }
 
@@ -75,17 +77,17 @@ export async function signOut() {
   await fa.signOut(auth);
 }
 
-/** 계정 삭제(탈퇴): 서버 기록을 지운 뒤 인증 계정도 지운다. 오래전에 로그인했다면 다시 로그인이 필요할 수 있다. */
+/** 계정 삭제 전 본인 확인 (최근 로그인이 필요하다). 클릭 직후 가장 먼저 불러야 팝업이 막히지 않는다 */
+export async function reauthenticate() {
+  const { auth, fa } = await init();
+  const u = auth.currentUser;
+  if (!u) throw new LoginError("other");
+  await fa.reauthenticateWithPopup(u, new fa.GoogleAuthProvider());
+}
+
+/** 인증 계정 삭제 (reauthenticate 뒤, 서버 기록을 지운 다음에 부른다) */
 export async function deleteAccount() {
   const { auth, fa } = await init();
   const u = auth.currentUser;
-  if (!u) return;
-  try {
-    await fa.deleteUser(u);
-  } catch (e) {
-    if ((e as { code?: string }).code === "auth/requires-recent-login") {
-      await fa.reauthenticateWithPopup(u, new fa.GoogleAuthProvider());
-      await fa.deleteUser(u);
-    } else throw e;
-  }
+  if (u) await fa.deleteUser(u);
 }

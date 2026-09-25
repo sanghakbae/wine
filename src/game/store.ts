@@ -1,5 +1,5 @@
 import type { Level } from "./quiz";
-import { onBeforeRedirect, onUser } from "../auth";
+import { onUser } from "../auth";
 import { loadProgress, saveProgress } from "../cloud";
 
 // 게임 기록: 최고 점수, 셀러(맞힌 와인), 판 수.
@@ -55,19 +55,7 @@ function merge(...parts: (Plain | State | null)[]): State {
 
 const plain = (s: State) => ({ best: s.best, found: [...s.found], plays: s.plays });
 
-// 리다이렉트 로그인으로 페이지가 다시 열렸을 때, 떠나기 전 손님 기록을 되살린다 (같은 탭에서 한 번만)
-const GUEST_STASH = "blind-bottle:guest-stash";
-function takeGuestStash(): State {
-  try {
-    const raw = sessionStorage.getItem(GUEST_STASH);
-    sessionStorage.removeItem(GUEST_STASH);
-    return raw ? merge(JSON.parse(raw) as Plain) : empty();
-  } catch {
-    return empty();
-  }
-}
-
-let state = takeGuestStash();
+let state = empty();
 let uid: string | null = null;
 let level: Level = read<Level>(LEVEL_KEY) ?? read<Plain>(LEGACY_KEY)?.level ?? "easy";
 const listeners = new Set<() => void>();
@@ -80,22 +68,21 @@ function persist() {
   timer = window.setTimeout(flushNow, 800);
 }
 
-/** 미뤄 둔 서버 저장을 지금 한다 (로그아웃 직전 등) */
-function flushNow() {
+/** 미뤄 둔 서버 저장을 지금 한다 (로그아웃 직전 등). 서버 기록과 합친 결과를 받아 화면에도 반영한다 */
+async function flushNow() {
   clearTimeout(timer);
   timer = 0;
-  if (uid) return saveProgress(plain(state));
-  return Promise.resolve(false);
+  const me = uid;
+  if (!me) return false;
+  const merged = await saveProgress(plain(state));
+  if (!merged || uid !== me) return false;
+  const before = state.found.size + state.plays;
+  state = merge(state, merged);
+  write(cacheKey(me), plain(state));
+  if (state.found.size + state.plays !== before) listeners.forEach((f) => f());
+  return true;
 }
 
-onBeforeRedirect(() => {
-  if (uid) return;
-  try {
-    sessionStorage.setItem(GUEST_STASH, JSON.stringify(plain(state)));
-  } catch {
-    // 무시
-  }
-});
 
 onUser(async (u) => {
   if (u && u.uid !== uid) {

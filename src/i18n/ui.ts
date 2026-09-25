@@ -3,6 +3,10 @@
 export type Lang = "ko" | "en" | "ja" | "zh" | "es" | "fr" | "de" | "it" | "pt";
 
 const ko = {
+  login_inapp: "앱 안의 브라우저에서는 Google 로그인이 막혀 있어요. 오른쪽 위 메뉴에서 사파리나 크롬으로 열어 주세요.",
+  login_popup: "로그인 창(팝업)이 막혔어요. 팝업을 허용한 뒤 다시 눌러 주세요.",
+  delete_fail: "삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  rank_me: "나",
   hint_title: "💡 힌트",
   hint_cost: "누를 때마다 −{n}점",
   hb_country: "국가 보기",
@@ -136,6 +140,10 @@ export type UIKey = keyof typeof ko;
 export type Dict = Record<UIKey, string>;
 
 const en: Dict = {
+  login_inapp: "Google sign-in is blocked inside in-app browsers. Open this page in Safari or Chrome.",
+  login_popup: "The sign-in popup was blocked. Allow popups and try again.",
+  delete_fail: "Couldn’t delete. Please try again later.",
+  rank_me: "You",
   hint_title: "💡 Hints",
   hint_cost: "−{n} pts each",
   hb_country: "Show country",
@@ -266,6 +274,10 @@ const en: Dict = {
 };
 
 const ja: Dict = {
+  login_inapp: "アプリ内ブラウザではGoogleログインが使えません。SafariかChromeで開いてください。",
+  login_popup: "ログイン用のポップアップがブロックされました。許可してからもう一度お試しください。",
+  delete_fail: "削除できませんでした。しばらくしてからもう一度お試しください。",
+  rank_me: "あなた",
   hint_title: "💡 ヒント",
   hint_cost: "1回ごとに −{n}点",
   hb_country: "国を見る",
@@ -396,6 +408,10 @@ const ja: Dict = {
 };
 
 const zh: Dict = {
+  login_inapp: "应用内浏览器无法使用 Google 登录，请用 Safari 或 Chrome 打开。",
+  login_popup: "登录弹窗被拦截了，请允许弹窗后再试。",
+  delete_fail: "删除失败，请稍后再试。",
+  rank_me: "我",
   hint_title: "💡 提示",
   hint_cost: "每次 −{n}分",
   hb_country: "看国家",
@@ -526,6 +542,10 @@ const zh: Dict = {
 };
 
 const es: Dict = {
+  login_inapp: "El inicio de sesión con Google no funciona en navegadores dentro de apps. Abre la página en Safari o Chrome.",
+  login_popup: "Se bloqueó la ventana emergente. Permite las ventanas emergentes e inténtalo de nuevo.",
+  delete_fail: "No se pudo eliminar. Inténtalo de nuevo más tarde.",
+  rank_me: "Tú",
   hint_title: "💡 Pistas",
   hint_cost: "−{n} pts cada una",
   hb_country: "Ver país",
@@ -656,6 +676,10 @@ const es: Dict = {
 };
 
 const fr: Dict = {
+  login_inapp: "La connexion Google est bloquée dans les navigateurs intégrés aux apps. Ouvrez la page dans Safari ou Chrome.",
+  login_popup: "La fenêtre de connexion a été bloquée. Autorisez les fenêtres pop-up puis réessayez.",
+  delete_fail: "Suppression impossible. Réessayez plus tard.",
+  rank_me: "Vous",
   hint_title: "💡 Indices",
   hint_cost: "−{n} pts chacun",
   hb_country: "Voir le pays",
@@ -786,6 +810,10 @@ const fr: Dict = {
 };
 
 const de: Dict = {
+  login_inapp: "In App-internen Browsern ist die Google-Anmeldung gesperrt. Öffne die Seite in Safari oder Chrome.",
+  login_popup: "Das Anmelde-Pop-up wurde blockiert. Pop-ups erlauben und erneut versuchen.",
+  delete_fail: "Löschen fehlgeschlagen. Bitte später erneut versuchen.",
+  rank_me: "Du",
   hint_title: "💡 Tipps",
   hint_cost: "je −{n} Pkt.",
   hb_country: "Land zeigen",
@@ -916,6 +944,10 @@ const de: Dict = {
 };
 
 const it: Dict = {
+  login_inapp: "L’accesso con Google è bloccato nei browser interni alle app. Apri la pagina in Safari o Chrome.",
+  login_popup: "Il popup di accesso è stato bloccato. Consenti i popup e riprova.",
+  delete_fail: "Eliminazione non riuscita. Riprova più tardi.",
+  rank_me: "Tu",
   hint_title: "💡 Indizi",
   hint_cost: "−{n} pt ciascuno",
   hb_country: "Vedi paese",
@@ -1046,6 +1078,10 @@ const it: Dict = {
 };
 
 const pt: Dict = {
+  login_inapp: "O login com Google é bloqueado em navegadores dentro de apps. Abra a página no Safari ou no Chrome.",
+  login_popup: "A janela de login foi bloqueada. Permita pop-ups e tente de novo.",
+  delete_fail: "Não foi possível excluir. Tente novamente mais tarde.",
+  rank_me: "Você",
   hint_title: "💡 Dicas",
   hint_cost: "−{n} pts cada",
   hb_country: "Ver país",

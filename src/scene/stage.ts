@@ -252,7 +252,7 @@ export class Stage {
     const since = now - this.lastFrame;
     if (since < interval - 2) return;
     this.lastFrame = now;
-    if (since < 250) this.adapt(since, interval);
+    if (since < 250 && !active) this.adapt(since, interval);
     this.frame(Math.min(since / 1000, 0.05));
   }
 
@@ -268,7 +268,7 @@ export class Stage {
     if (this.slowFrames > 24 && this.dpr > 1) {
       this.setDpr(this.dpr - 0.25);
       this.slowFrames = 0;
-    } else if (this.fastFrames > 600 && this.dpr < this.maxDpr) {
+    } else if (this.fastFrames > 300 && this.dpr < this.maxDpr) {
       this.setDpr(this.dpr + 0.25);
       this.fastFrames = 0;
     }

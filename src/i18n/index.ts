@@ -72,7 +72,7 @@ async function loadOne(l: Lang) {
   try {
     loaded[l] = (await load()).default;
   } catch {
-    loaded[l] = {};
+    // 실패는 기억하지 않는다 (다음에 다시 시도)
   }
 }
 
@@ -188,6 +188,12 @@ const REGION_SHOW: Record<string, string> = {
   "포르투갈 북부": "Norte",
 };
 const regionShow = (ko: string) => REGION_SHOW[ko] ?? REGION_EN[ko] ?? ko;
+
+/** 이 언어로 보여 줄 실제 생산자 이름이 있는지 (없으면 생산자 문제를 내지 않는다) */
+export function hasProducer(w: Wine) {
+  if (current === "ko") return true;
+  return !!(textOf(w)?.producer ?? loaded.en?.[w.id]?.producer ?? w.maker);
+}
 
 export function regionName(w: Wine) {
   if (current === "ko") return regionOf(w);

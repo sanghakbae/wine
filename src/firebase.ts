@@ -20,6 +20,11 @@ export const isLocal = /^(localhost|127\.|0\.0\.0\.0|\[::1\]|192\.168\.|10\.)/.t
 let appPromise: Promise<FirebaseApp> | null = null;
 
 export function firebaseApp(): Promise<FirebaseApp> {
-  appPromise ??= import("firebase/app").then(({ initializeApp, getApps, getApp }) => (getApps().length ? getApp() : initializeApp(firebaseConfig)));
+  appPromise ??= import("firebase/app")
+    .then(({ initializeApp, getApps, getApp }) => (getApps().length ? getApp() : initializeApp(firebaseConfig)))
+    .catch((e) => {
+      appPromise = null; // 실패는 기억하지 않는다 (다음에 다시 시도)
+      throw e;
+    });
   return appPromise;
 }

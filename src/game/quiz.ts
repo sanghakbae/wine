@@ -3,7 +3,7 @@ import { pickVintage } from "../data/vintage";
 import { WINES, type Trivia, type Wine, type WineType } from "../data/wines";
 import type { Hide } from "../label/painter";
 import { SIGNATURE } from "../label/designs/signature";
-import { countryName, familyName, grapeName, initialOf, producerOf, quizOf, regionName, t, typeName, wineName, wineSub, type UIKey } from "../i18n";
+import { countryName, familyName, hasProducer, grapeName, initialOf, producerOf, quizOf, regionName, t, typeName, wineName, wineSub, type UIKey } from "../i18n";
 
 export type QType = "name" | "country" | "region" | "grape" | "type" | "producer" | "shape" | "trivia";
 export type Level = "easy" | "normal" | "hard";
@@ -69,7 +69,7 @@ const TYPES: WineType[] = ["red", "white", "rose", "sparkling", "sweet", "fortif
 function qtypesFor(w: Wine, level: Level): QType[] {
   const out: QType[] = ["name", "name", "country", "region", "region", "grape"];
   if (level !== "hard") out.push("type");
-  if (w.producerQ) out.push("producer", "producer");
+  if (w.producerQ && hasProducer(w)) out.push("producer", "producer");
   if (SHAPES[w.shape].family) out.push("shape");
   if (quizOf(w).length) out.push("trivia", "trivia", "trivia");
   return out;
@@ -178,7 +178,7 @@ export function makeQuestion(level: Level, used: Set<string>, recentTypes: QType
 /** 한 와인에 대해 낼 수 있는 문제를 전부 (와인별 퀴즈) */
 export function wineQuiz(w: Wine, level: Level): Question[] {
   const base: QType[] = ["name", "country", "region", "grape", "type"];
-  if (w.producerQ) base.push("producer");
+  if (w.producerQ && hasProducer(w)) base.push("producer");
   if (SHAPES[w.shape].family) base.push("shape");
   const qs = base.map((q) => buildQuestion(w, q, level));
   for (const tr of quizOf(w)) qs.push(buildQuestion(w, "trivia", level, tr));

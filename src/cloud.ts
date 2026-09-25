@@ -1,7 +1,7 @@
 // Firestore: 난이도별 전체 랭킹, 와인별 정답률, 로그인한 사람의 게임 기록.
 // 쓰기는 모두 Google 로그인한 사람만 (firestore.rules 참고). 읽기(랭킹·정답률)는 누구나.
 import type { Firestore } from "firebase/firestore";
-import { firebaseApp } from "./firebase";
+import { firebaseApp, isLocal } from "./firebase";
 import { cloudEnabled } from "./cloudFlag";
 import { currentUser } from "./auth";
 import type { Level } from "./game/quiz";
@@ -18,7 +18,12 @@ interface Ctx {
 let ctx: Promise<Ctx> | null = null;
 
 function cloud(): Promise<Ctx> {
-  ctx ??= Promise.all([firebaseApp(), import("firebase/firestore")]).then(([app, fs]) => ({ db: fs.getFirestore(app), fs }));
+  ctx ??= Promise.all([firebaseApp(), import("firebase/firestore")])
+    .then(([app, fs]) => ({ db: fs.getFirestore(app), fs }))
+    .catch((e) => {
+      ctx = null; // 실패는 기억하지 않는다 (다음에 다시 시도)
+      throw e;
+    });
   return ctx;
 }
 
@@ -27,6 +32,8 @@ const uid = () => currentUser()?.uid ?? null;
 export interface Entry {
   uid: string;
   nick: string;
+  /** 나라 코드 (ISO 두 글자) */
+  cc: string;
   score: number;
   correct: number;
   total: number;
@@ -47,6 +54,7 @@ export async function topScores(level: Level, n = 20): Promise<Entry[] | null> {
       return {
         uid: d.id,
         nick: String(x.nick ?? "?"),
+        cc: typeof x.cc === "string" ? x.cc : "",
         score: Number(x.score ?? 0),
         correct: Number(x.correct ?? 0),
         total: Number(x.total ?? 10),
@@ -61,8 +69,9 @@ export async function topScores(level: Level, n = 20): Promise<Entry[] | null> {
 }
 
 /** 기록 등록. 이전 기록보다 낮으면 순위만 계산한다. 반환값: 전체 순위 */
-export async function submitScore(level: Level, nick: string, score: number, correct: number, total: number, lang: string): Promise<number | null> {
-  if (!cloudEnabled) return null;
+export async function submitScore(level: Level, nick: string, cc: string, score: number, correct: number, total: number, lang: string): Promise<number | null> {
+  // 개발 서버에서 한 게임은 공개 랭킹에 올리지 않는다
+  if (!cloudEnabled || isLocal) return null;
   try {
     const me = uid();
     if (!me) return null;
@@ -74,7 +83,8 @@ export async function submitScore(level: Level, nick: string, score: number, cor
     const best = Math.max(prevScore, score);
     if (score >= prevScore) {
       await fs.setDoc(ref, {
-        nick: nick.slice(0, 12),
+        nick: Array.from(nick.trim() || "?").slice(0, 12).join(""),
+        cc: cc.slice(0, 2),
         score,
         correct,
         total,
@@ -105,7 +115,7 @@ export async function wineRate(id: string): Promise<{ n: number; c: number } | n
 }
 
 export function recordAnswer(id: string, correct: boolean) {
-  if (!cloudEnabled) return;
+  if (!cloudEnabled || isLocal) return;
   if (!uid()) return;
   cloud()
     .then(async (c) => {
@@ -158,21 +168,35 @@ export async function loadProgress(): Promise<Progress | null> {
   }
 }
 
-export async function saveProgress(p: Progress): Promise<boolean> {
+/**
+ * 기록 저장: 서버에 있는 기록과 합쳐서 쓴다 (최고 점수·판 수는 큰 값, 맞힌 와인은 합집합).
+ * 서버 기록을 아직 못 읽었거나 여러 기기에서 동시에 저장해도 기록이 줄어들지 않는다. 반환값: 합친 결과
+ */
+export async function saveProgress(p: Progress): Promise<Progress | null> {
   const me = uid();
-  if (!me) return false;
+  if (!me) return null;
   try {
     const c = await cloud();
-    await c.fs.setDoc(c.fs.doc(c.db, "users", me), {
-      name: (currentUser()?.name ?? "").slice(0, 40),
-      best: p.best,
-      found: p.found.slice(0, 5000),
-      plays: p.plays,
-      updatedAt: c.fs.serverTimestamp(),
+    const { fs } = c;
+    const ref = fs.doc(c.db, "users", me);
+    return await fs.runTransaction(c.db, async (tx) => {
+      const snap = await tx.get(ref);
+      const x = snap.exists() ? snap.data() : {};
+      const found = new Set<string>([...(Array.isArray(x.found) ? x.found.map(String) : []), ...p.found]);
+      const merged: Progress = {
+        best: {
+          easy: Math.max(Number(x.best?.easy ?? 0), p.best.easy),
+          normal: Math.max(Number(x.best?.normal ?? 0), p.best.normal),
+          hard: Math.max(Number(x.best?.hard ?? 0), p.best.hard),
+        },
+        found: [...found].slice(0, 5000),
+        plays: Math.max(Number(x.plays ?? 0), p.plays),
+      };
+      tx.set(ref, { name: (currentUser()?.name ?? "").slice(0, 40), ...merged, updatedAt: fs.serverTimestamp() });
+      return merged;
     });
-    return true;
   } catch {
-    return false;
+    return null;
   }
 }
 

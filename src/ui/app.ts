@@ -34,10 +34,12 @@ import {
 import type { Stage } from "../scene/stage";
 import type { Music } from "../audio/music";
 import { bottleIcon } from "./icon";
-import { canInstall, install, onInstallChange } from "./install";
-import { currentUser, deleteAccount, onUser, signIn, signOut } from "../auth";
+import { install, onInstallChange } from "./install";
+import { countryLabel, myCountry, short3 } from "../country";
+import { updatePending } from "./update";
+import { LoginError, authReady, currentUser, deleteAccount, onUser, reauthenticate, signIn, signOut } from "../auth";
 import { track } from "../analytics";
-import { cloudEnabled, deleteMyData, recordAnswer, saveNick, savedNick, submitScore, topScores, wineRate } from "../cloud";
+import { cloudEnabled, deleteMyData, recordAnswer, submitScore, topScores, wineRate, type Entry } from "../cloud";
 
 /** Google 로그인 버튼 — 구글 브랜드 가이드의 공식 G 로고, 다크 테마 */
 const GOOGLE_BTN = (label: string) =>
@@ -61,6 +63,15 @@ type Mode = { kind: "game"; level: Level } | { kind: "wine"; level: Level; wine:
 export class App {
   private hud: HTMLElement;
   private hero: HTMLElement;
+  private liveRank: HTMLElement;
+  /** 게임 중 왼쪽 위 랭킹: 서버에서 받은 상위 기록 (null = 못 불러옴, undefined = 불러오는 중) */
+  private liveTop: Entry[] | null | undefined = undefined;
+  private liveLevel: Level | null = null;
+  private liveAt = 0;
+  private cellarIO: IntersectionObserver | null = null;
+  /** 판마다 늘어나는 번호: 늦게 도착한 비동기 결과가 다른 판 화면을 덮지 않게 */
+  private gameNo = 0;
+  private rankReq = 0;
   private vignette: HTMLElement;
   private view: "landing" | "play" | "result" | "wine" = "landing";
   private panel: HTMLElement;
@@ -89,6 +100,7 @@ export class App {
       `<div class="vignette" hidden></div>
        <header class="hero" hidden></header>
        <header class="hud" hidden></header>
+       <aside class="live-rank" hidden aria-live="polite"></aside>
        <section class="panel"></section>
        <button class="sound" aria-pressed="false"></button>
        <div class="cellar" hidden></div>`,
@@ -96,6 +108,12 @@ export class App {
     this.hero = root.querySelector(".hero")!;
     this.vignette = root.querySelector(".vignette")!;
     this.hud = root.querySelector(".hud")!;
+    this.liveRank = root.querySelector(".live-rank")!;
+    this.liveRank.onclick = (e) => {
+      if (!(e.target as HTMLElement).closest("[data-act=lr-toggle]")) return;
+      setLiveRankCollapsed(!liveRankCollapsed());
+      this.renderLiveRank();
+    };
     this.panel = root.querySelector(".panel")!;
     this.cellar = root.querySelector(".cellar")!;
     this.sound = root.querySelector(".sound")!;
@@ -153,8 +171,15 @@ export class App {
   }
 
   // ───────────────────────── 첫 화면 (랜딩)
+  /** 새 버전으로 새로고침해도 되는 때 (첫 화면·결과 화면) */
+  get idle() {
+    return this.view === "landing" || this.view === "result";
+  }
+
   private showTitle() {
+    if (updatePending()) return location.reload();
     this.view = "landing";
+    this.liveRank.hidden = true;
     this.hud.hidden = true;
     this.cellar.hidden = true;
     this.hero.hidden = false;
@@ -163,6 +188,61 @@ export class App {
     this.spinLanding();
     this.startLandingTimer();
     this.renderLanding();
+  }
+
+  /** 게임 중 왼쪽 위 랭킹: 이번 난이도 상위 기록을 한 번 받아 두고(1분 캐시), 내 점수 줄을 실시간으로 끼워 넣는다 */
+  private async loadLiveRank() {
+    const m = this.mode;
+    if (!cloudEnabled || m.kind !== "game") {
+      this.liveRank.hidden = true;
+      return;
+    }
+    const level = m.level;
+    const fresh = this.liveLevel === level && this.liveTop && Date.now() - this.liveAt < 60_000;
+    if (!fresh) {
+      this.liveLevel = level;
+      this.liveTop = undefined;
+      this.renderLiveRank();
+      const list = await topScores(level, 10);
+      if (this.liveLevel !== level) return;
+      this.liveTop = list;
+      this.liveAt = Date.now();
+    }
+    this.renderLiveRank();
+  }
+
+  private renderLiveRank() {
+    const m = this.mode;
+    if (!cloudEnabled || m.kind !== "game" || this.view !== "play") {
+      this.liveRank.hidden = true;
+      return;
+    }
+    this.liveRank.hidden = false;
+    const collapsed = liveRankCollapsed();
+    this.liveRank.classList.toggle("collapsed", collapsed);
+    const head = `<button class="lr-head" data-act="lr-toggle" aria-expanded="${!collapsed}"><span>🏆 ${levelName(m.level)} ${t("rank_btn")}</span><i>${collapsed ? "▸" : "▾"}</i></button>`;
+    if (collapsed) {
+      this.liveRank.innerHTML = head;
+    } else {
+      // 서버 상위 기록 사이에 내 현재 점수를 끼워 넣고 10위까지만 보여 준다
+      const me = currentUser();
+      const others = (this.liveTop ?? []).filter((x) => !(me && x.uid === me.uid));
+      const myRank = others.filter((x) => x.score > this.score).length + 1;
+      const rows = others.map((x) => ({ nick: x.nick, cc: x.cc, score: x.score, mine: false }));
+      rows.splice(myRank - 1, 0, { nick: t("rank_me"), cc: myCountry(), score: this.score, mine: true });
+      const top10 = rows.slice(0, 10);
+      const note = this.liveTop === undefined ? "…" : this.liveTop === null ? t("rank_fail") : "";
+      this.liveRank.innerHTML = `${head}
+        <ol>${top10
+          .map(
+            (r, i) =>
+              `<li class="${r.mine ? "mine" : ""}"><b>${i + 1}</b><i class="cc" title="${esc(countryLabel(r.cc))}">${esc(short3(countryLabel(r.cc)))}</i><span title="${esc(r.nick)}">${esc(short3(r.nick))}</span><em>${r.score.toLocaleString(lang())}</em></li>`,
+          )
+          .join("")}</ol>
+        ${myRank > 10 ? `<p class="lr-me"><span>${t("rank_me")}</span><em>${this.score.toLocaleString(lang())}</em></p>` : ""}
+        ${note ? `<p class="lr-note">${note}</p>` : ""}`;
+    }
+    this.liveRank.style.top = `${Math.round(this.hud.getBoundingClientRect().bottom) + 6}px`;
   }
 
   /** 화면 위쪽에 잠깐 떴다 사라지는 안내 */
@@ -177,12 +257,31 @@ export class App {
     setTimeout(() => el.remove(), 3300);
   }
 
-  /** Google 로그인. 실패하면(도메인 미승인·네트워크 등) 알려 준다 */
+  /** Google 로그인. 실패하면 이유에 맞춰 알려 준다 */
   private async login() {
     try {
       await signIn();
+    } catch (e) {
+      const reason = e instanceof LoginError ? e.reason : "other";
+      alert(t(reason === "inapp" ? "login_inapp" : reason === "popup" ? "login_popup" : "login_fail"));
+    }
+  }
+
+  /** 계정 삭제: 본인 확인 → 서버 기록 삭제 → 계정 삭제. 한 단계라도 실패하면 거기서 멈춘다 */
+  private async deleteAccountFlow() {
+    if (!confirm(t("delete_confirm"))) return;
+    try {
+      await reauthenticate(); // 클릭 직후 첫 비동기 작업이어야 팝업이 막히지 않는다
     } catch {
-      alert(t("login_fail"));
+      return alert(t("delete_fail"));
+    }
+    store.forget();
+    try {
+      await deleteMyData();
+      await deleteAccount();
+      track("account_delete");
+    } catch {
+      alert(t("delete_fail"));
     }
   }
 
@@ -239,12 +338,9 @@ export class App {
       <nav class="links">
         <button class="link" data-act="cellar">${t("cellarBtn", { a: store.foundCount, b: WINES.length })}</button>
         ${cloudEnabled ? `<button class="link" data-act="rank">🏆 ${t("rank_btn")}</button>` : ""}
-        ${canInstall() ? `<button class="link" data-act="install">⬇ ${t("install")}</button>` : ""}
         ${cloudEnabled && user ? `<button class="link danger" data-act="delete">${t("delete_account")}</button>` : ""}
-      </nav>
-      <footer class="foot">
-        <a href="privacy.html" target="_blank" rel="noopener">${t("privacy")}</a>
-      </footer>`;
+        <a class="link privacy" href="privacy.html" target="_blank" rel="noopener">${t("privacy")}</a>
+      </nav>`;
     this.panel.onclick = async (e) => {
       const el = (e.target as HTMLElement).closest<HTMLElement>("[data-level],[data-act]");
       if (!el) return;
@@ -271,12 +367,7 @@ export class App {
           await store.flush();
           return signOut();
         case "delete":
-          if (!confirm(t("delete_confirm"))) return;
-          store.forget();
-          await deleteMyData().catch(() => null);
-          await deleteAccount().catch(() => alert(t("login_fail")));
-          track("account_delete");
-          return;
+          return this.deleteAccountFlow();
       }
     };
     this.syncInsets();
@@ -298,9 +389,11 @@ export class App {
     this.vignette.hidden = true;
     this.hud.hidden = false;
     this.cellar.hidden = true;
+    this.gameNo++;
     track("game_start", { level: mode.level, mode: mode.kind, lang: lang(), ...(mode.kind === "wine" ? { wine: mode.wine.id } : {}) });
     this.next();
-    if (cloudEnabled && !store.saving) this.toast(t("guest_toast"));
+    if (cloudEnabled && authReady() && !store.saving) this.toast(t("guest_toast"));
+    this.loadLiveRank();
   }
 
   private next() {
@@ -385,6 +478,7 @@ export class App {
       store.addFound(q.wine.id);
     } else this.streak = 0;
     this.results.push({ q, correct, points });
+    this.renderLiveRank();
     track("answer", { qtype: q.qtype, correct, level: this.mode.level, wine: q.wine.id, hints: this.hintsUsed.length });
     recordAnswer(q.wine.id, correct);
     this.music.cue(correct ? "right" : "wrong");
@@ -436,7 +530,25 @@ export class App {
 
   // ───────────────────────── 결과
   private isBest = false;
+  /** 랭킹 등록 결과: null = 아직, 0 = 실패, n = 전체 순위 */
   private submitted: number | null = null;
+  private submitting = false;
+
+  private async autoSubmit() {
+    const m = this.mode;
+    const user = currentUser();
+    if (!user || m.kind !== "game") return;
+    this.submitting = true;
+    const game = this.gameNo;
+    const right = this.results.filter((r) => r.correct).length;
+    const rank = await submitScore(m.level, user.name, myCountry(), this.score, right, this.results.length, lang());
+    this.submitting = false;
+    if (game !== this.gameNo) return;
+    track("rank_submit", { level: m.level, score: this.score, ok: rank !== null });
+    this.submitted = rank ?? 0;
+    this.liveAt = 0; // 다음 판에는 새 랭킹을 받아 온다
+    if (this.view === "result") this.renderResult();
+  }
 
   /** 게임을 끝내며 기록을 한 번만 확정한다 */
   private showResult() {
@@ -448,6 +560,7 @@ export class App {
     this.music.cue("finish");
     this.view = "result";
     this.hud.hidden = true;
+    this.liveRank.hidden = true;
     this.renderResult();
   }
 
@@ -460,8 +573,8 @@ export class App {
     if (cloudEnabled && m.kind === "game") {
       if (!user) rankBlock = `<div class="rank-login">${GOOGLE_BTN(t("login_to_rank"))}<p class="save-note">${t("login_save_note")}</p></div>`;
       else if (this.submitted) rankBlock = `<p class="rank-msg">${t("rank_done", { n: this.submitted })} · <a href="#" data-act="rank">${t("rank_title")}</a></p>`;
-      else
-        rankBlock = `<form class="rank-form"><input name="nick" maxlength="12" placeholder="${t("rank_nick")}" value="${esc(savedNick() || user.name.slice(0, 12))}" autocomplete="nickname" required><button class="primary">${t("rank_submit")}</button><span class="rank-msg" aria-live="polite"></span></form>`;
+      else if (this.submitted === 0) rankBlock = `<p class="rank-msg">${t("rank_fail")}</p>`;
+      else rankBlock = `<p class="rank-msg">…</p>`;
     }
     this.panel.className = "panel result";
     this.panel.innerHTML = `
@@ -505,28 +618,8 @@ export class App {
       else if (act === "cellar") this.openCellar();
       else if (act === "home") this.showTitle();
     };
-    const form = this.panel.querySelector<HTMLFormElement>(".rank-form");
-    if (form) {
-      const score = this.score;
-      form.onsubmit = async (e) => {
-        e.preventDefault();
-        const nick = (form.elements.namedItem("nick") as HTMLInputElement).value.trim();
-        if (!nick) return;
-        saveNick(nick);
-        const btn = form.querySelector("button")!;
-        const msg = form.querySelector<HTMLElement>(".rank-msg")!;
-        btn.disabled = true;
-        const rank = await submitScore(m.level, nick, score, right, this.results.length, lang());
-        track("rank_submit", { level: m.level, score, ok: rank !== null });
-        if (rank) {
-          this.submitted = rank;
-          this.renderResult();
-        } else {
-          msg.textContent = t("rank_fail");
-          btn.disabled = false;
-        }
-      };
-    }
+    // 로그인한 상태면 이번 판을 랭킹에 자동 등록한다 (Google 이름 + 접속 국가)
+    if (cloudEnabled && m.kind === "game" && user && this.submitted === null && !this.submitting) this.autoSubmit();
     this.syncInsets();
   }
 
@@ -558,15 +651,17 @@ export class App {
       const tab = el.closest<HTMLElement>("[data-level]");
       if (tab) this.openRanking(tab.dataset.level as Level);
     };
-    const list = await topScores(level, 20);
+    const req = ++this.rankReq;
     const ol = this.cellar.querySelector(".rank-list");
-    if (!ol) return;
+    const list = await topScores(level, 20);
+    if (req !== this.rankReq || !ol || !ol.isConnected) return;
     if (!list) ol.innerHTML = `<li class="rank-note">${t("rank_fail")}</li>`;
     else if (!list.length) ol.innerHTML = `<li class="rank-note">${t("rank_empty")}</li>`;
     else
       ol.innerHTML = list
         .map(
-          (x, i) => `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="nk">${esc(x.nick)}</span><span class="cr">${x.correct}/${x.total}</span><em>${x.score.toLocaleString(lang())}</em></li>`,
+          (x, i) =>
+            `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="cc" title="${esc(countryLabel(x.cc))}">${esc(short3(countryLabel(x.cc)))}</span><span class="nk" title="${esc(x.nick)}">${esc(short3(x.nick))}</span><span class="cr">${x.correct}/${x.total}</span><em>${x.score.toLocaleString(lang())}</em></li>`,
         )
         .join("");
   }
@@ -606,11 +701,16 @@ export class App {
     const sentinel = document.createElement("div");
     sentinel.className = "cel-more";
     const more = () => {
-      if (shown >= list.length) return;
-      sentinel.insertAdjacentHTML("beforebegin", list.slice(shown, shown + BATCH).map(item).join(""));
-      shown = Math.min(list.length, shown + BATCH);
+      // 한 묶음을 붙여도 아래 끝이 가까우면(큰 화면·짧은 목록) 계속 채운다
+      do {
+        if (shown >= list.length) return;
+        sentinel.insertAdjacentHTML("beforebegin", list.slice(shown, shown + BATCH).map(item).join(""));
+        shown = Math.min(list.length, shown + BATCH);
+      } while (grid.scrollHeight - grid.scrollTop - grid.clientHeight < 400);
     };
+    this.cellarIO?.disconnect();
     const io = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && more(), { root: grid, rootMargin: "400px" });
+    this.cellarIO = io;
     const draw = () => {
       const k = input.value.trim().toLowerCase();
       list = WINES.filter((w) => {
@@ -648,6 +748,7 @@ export class App {
     const found = store.isFound(w.id);
     track("wine_view", { wine: w.id, found });
     this.view = "wine";
+    this.liveRank.hidden = true;
     this.hero.hidden = true;
     this.vignette.hidden = true;
     this.cellar.hidden = true;
@@ -679,8 +780,10 @@ export class App {
   private onKey(e: KeyboardEvent) {
     if (!this.cellar.hidden && e.key === "Escape") return this.closeOverlay();
     if (!this.cellar.hidden || e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (this.panel.classList.contains("play")) {
-      const n = Number(e.key);
+      const d = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+      const n = d ? Number(d[1]) : NaN;
       if (!this.answered && n >= 1 && n <= (this.q?.options.length ?? 0)) this.answer(n - 1);
       else if (this.answered && (e.key === "Enter" || e.key === " ")) {
         e.preventDefault();
@@ -725,4 +828,21 @@ function grade(r: number) {
   if (r >= 0.6) return t("g3");
   if (r >= 0.4) return t("g4");
   return t("g5");
+}
+
+// 게임 중 랭킹 창을 접어 둘지 (화면 설정이라 기기에 기억)
+const LR_KEY = "blind-bottle:live-rank";
+function liveRankCollapsed() {
+  try {
+    return localStorage.getItem(LR_KEY) === "hidden";
+  } catch {
+    return false;
+  }
+}
+function setLiveRankCollapsed(v: boolean) {
+  try {
+    localStorage.setItem(LR_KEY, v ? "hidden" : "shown");
+  } catch {
+    // 무시
+  }
 }

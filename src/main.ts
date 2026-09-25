@@ -20,6 +20,7 @@ import { lang, loadWineTexts } from "./i18n";
 import { startAnalytics, track } from "./analytics";
 import { standalone } from "./ui/install";
 import { startAuth } from "./auth";
+import { watchUpdates } from "./ui/update";
 
 async function boot() {
   // 라벨 캔버스에 글꼴이 빠지지 않도록, 그리고 고른 언어의 와인 해설을 먼저 불러 둔다
@@ -28,10 +29,20 @@ async function boot() {
   app.innerHTML = `<div class="stage"></div>`;
   const stage = new Stage(app.querySelector(".stage")!);
   const music = new Music();
-  new App(app, stage, music);
+  const game = new App(app, stage, music);
+  watchUpdates(() => game.idle);
   startAuth();
   startAnalytics();
   track("app_open", { lang: lang(), standalone: standalone(), version: __APP_VERSION__ });
   if (import.meta.env.DEV) Object.assign(window, { __stage: stage, __music: music });
 }
-boot();
+boot().catch((e) => {
+  // 시작하다 실패하면(WebGL 미지원 등) 로딩 화면에 멈춰 있지 않고 알려 준다
+  console.error(e);
+  const app = document.querySelector<HTMLDivElement>("#app");
+  if (app)
+    app.innerHTML = `<div class="boot"><div style="max-width:320px;text-align:center;letter-spacing:0;line-height:1.6;color:#e9dcc6;font-weight:500">
+      3D 화면을 시작하지 못했어요. 브라우저를 최신으로 업데이트하거나 다른 브라우저로 열어 주세요.<br><br>
+      Couldn’t start the 3D view. Please update your browser or try another one.<br><br>
+      <button onclick="location.reload()" style="font:inherit;padding:4.5px 8px;border-radius:6px;border:1px solid #d9b56a;background:#6b1224;color:#fff">↻</button></div></div>`;
+});
