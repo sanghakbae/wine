@@ -34,6 +34,7 @@ import {
 import type { Stage } from "../scene/stage";
 import type { Music } from "../audio/music";
 import { bottleIcon } from "./icon";
+import { copyBanner } from "./promo";
 import { install, onInstallChange } from "./install";
 import { countryLabel, myCountry, short3 } from "../country";
 import { updatePending } from "./update";
@@ -77,6 +78,8 @@ export class App {
   private panel: HTMLElement;
   private cellar: HTMLElement;
   private sound: HTMLButtonElement;
+  /** 첫 화면 왼쪽 위: 홍보 배너 복사 */
+  private promo: HTMLButtonElement;
   private mode: Mode = { kind: "game", level: store.level };
   private round = 0;
   private total = ROUNDS;
@@ -103,6 +106,7 @@ export class App {
        <aside class="live-rank" hidden aria-live="polite"></aside>
        <section class="panel"></section>
        <button class="sound" aria-pressed="false"></button>
+       <button class="promo" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3 10.2v3.6c0 .7.5 1.2 1.2 1.2H6l1.3 4.4c.2.6.7 1 1.3 1h.9c.8 0 1.3-.7 1.1-1.5L9.6 15H11l6.4 3.6c.8.4 1.6-.1 1.6-1V6.4c0-.9-.9-1.4-1.6-1L11 9H4.2C3.5 9 3 9.5 3 10.2z"/><path d="M21 9.5a3.5 3.5 0 0 1 0 5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button>
        <div class="cellar" hidden></div>`,
     );
     this.hero = root.querySelector(".hero")!;
@@ -117,6 +121,13 @@ export class App {
     this.panel = root.querySelector(".panel")!;
     this.cellar = root.querySelector(".cellar")!;
     this.sound = root.querySelector(".sound")!;
+    this.promo = root.querySelector(".promo")!;
+    this.promo.onclick = async () => {
+      // 클립보드는 누른 그 순간에만 쓸 수 있어 병 그림도 여기서 바로 뜬다
+      const how = await copyBanner(this.stage.capture());
+      track("promo_copy", { how });
+      this.toast(t(how === "image" ? "promo_copied" : how === "text" ? "promo_text" : how === "file" ? "promo_saved" : "promo_fail"));
+    };
     this.sound.onclick = () => {
       this.music.toggle();
       this.renderSound();
@@ -195,6 +206,7 @@ export class App {
     this.liveRank.hidden = true;
     this.hud.hidden = true;
     this.hero.hidden = false;
+    this.promo.hidden = false;
     this.vignette.hidden = false;
     document.title = `${t("appName")} — Wine Quiz`;
     this.spinLanding();
@@ -371,6 +383,8 @@ export class App {
     const level = store.level;
     const user = currentUser();
     const sameTitle = t("appName").toUpperCase() === "BLIND BOTTLE";
+    this.promo.setAttribute("aria-label", t("promo_btn"));
+    this.promo.title = t("promo_btn");
     this.hero.innerHTML = `
       <div class="eyebrow"><i></i>WINE QUIZ · ${WINES.length.toLocaleString(lang())}<i></i></div>
       <h1 class="wordmark">BLIND BOTTLE</h1>
@@ -450,6 +464,7 @@ export class App {
     this.recent = [];
     this.view = "play";
     this.hero.hidden = true;
+    this.promo.hidden = true;
     this.vignette.hidden = true;
     this.hud.hidden = false;
     this.cellar.hidden = true;
@@ -813,6 +828,7 @@ export class App {
     this.view = "wine";
     this.liveRank.hidden = true;
     this.hero.hidden = true;
+    this.promo.hidden = true;
     this.vignette.hidden = true;
     this.cellar.hidden = true;
     this.hud.hidden = true;

@@ -152,6 +152,10 @@ button:disabled { opacity: 0.45; cursor: default; }
 /* 음악 켜기/끄기 */
 .sound { position: absolute; z-index: 4; top: max(8px, env(safe-area-inset-top)); right: 12px; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 999px; background: rgba(20,14,12,0.6); color: var(--gold); }
 .sound.off { color: var(--muted); }
+/* 첫 화면 왼쪽 위: 홍보 배너 복사 (음악 버튼과 짝) */
+.promo { position: absolute; z-index: 4; top: max(8px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 999px; background: rgba(20,14,12,0.6); color: var(--gold); }
+.promo[hidden] { display: none; }
+.promo:active { transform: scale(0.94); }
 .hud { padding-right: max(14px, env(safe-area-inset-right)); }
 /* 게임 중에는 음악 버튼이 점수 바로 아래 (오른쪽 끝을 점수와 맞춘다) */
 .sound { right: max(14px, env(safe-area-inset-right)); }

@@ -232,6 +232,36 @@ export class Stage {
     await fetch(`/__snap?name=${name}`, { method: "POST", body: url });
   }
 
+  /**
+   * 홍보 배너용: 지금 장면을 한 장 그리고 병이 서 있는 영역(패널·타이틀에 가리지 않은 곳)만 잘라 준다.
+   * WebGL 화면은 그린 직후에만 읽을 수 있어서 여기서 바로 그려 복사한다
+   */
+  capture(): HTMLCanvasElement | null {
+    // 병이 막 바뀌어 내려오거나 도는 중이어도 다 내려와 정면을 본 모습으로 뜬다 (다음 프레임부터는 하던 대로)
+    const { enter, spin } = this;
+    try {
+      this.enter = 1;
+      if (this.targetSpin !== null) this.spin = this.targetSpin;
+      this.frame(0);
+      const src = this.renderer.domElement;
+      const k = src.width / (this.host.clientWidth || window.innerWidth);
+      const top = Math.max(0, this.topInset * k);
+      const h = Math.max(1, src.height - this.bottomInset * k - top);
+      const room = src.width - this.rightInset * k;
+      const w = Math.min(room, h * 0.8);
+      const out = document.createElement("canvas");
+      out.width = Math.round(w);
+      out.height = Math.round(h);
+      out.getContext("2d")!.drawImage(src, (room - w) / 2, top, w, h, 0, 0, out.width, out.height);
+      return out;
+    } catch {
+      return null;
+    } finally {
+      this.enter = enter;
+      this.spin = spin;
+    }
+  }
+
   /** 탭이 가려져 rAF 가 멈췄을 때 검증용으로 수동 진행 */
   step(seconds = 1) {
     for (let t = 0; t < seconds; t += 1 / 30) this.frame(1 / 30);
