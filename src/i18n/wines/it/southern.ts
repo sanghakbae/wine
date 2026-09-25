@@ -178,6 +178,328 @@ const T: Record<string, WineText> = {
     fact: "Cantina fondata nel 2009 da Kevin Judd, per 25 anni enologo fondatore di Cloudy Bay. È famoso anche come fotografo dei paesaggi del vino neozelandese.",
     quiz: [{ q: "Che cos’è la «greywacke» di Greywacke Sauvignon Blanc?", a: "Un’arenaria comune nei letti dei fiumi di Marlborough", x: ["Il cane grigio del fondatore", "Il cielo nebbioso dell’alba", "Una balena di una leggenda maori"] }],
   },
+  sh_feltonroad_pn: {
+    fact: "Cantina simbolo di Bannockburn, nel Central Otago, che coltiva le viti in biodinamica. Ha portato il Pinot Nero neozelandese ai vertici mondiali.",
+    quiz: [{ q: "Quale metodo di coltivazione si applica al vigneto del Felton Road Bannockburn Pinot Noir?", a: "La biodinamica", x: ["La coltura idroponica", "La coltivazione in serra", "L’agricoltura intensiva con concimi chimici"] }],
+  },
+  sh_atarangi_pn: {
+    fact: "Cantina pioniera fondata a Martinborough nel 1980 da Clive Paton. «Ata Rangi» in maori significa «nuovo inizio» o «cielo dell’alba».",
+    quiz: [{ q: "Come arrivò in Nuova Zelanda il «clone Gumboot» (stivale di gomma) usato per l’Ata Rangi Pinot Noir?", a: "Un funzionario di dogana sequestrò le talee nascoste in uno stivale e le piantò", x: ["Lo inviò in dono l’ambasciatore francese", "Ne portarono i semi gli uccelli migratori", "Lo creò un istituto universitario per incrocio"] }],
+  },
+  sh_craggy_sophia: {
+    fact: "L’assemblaggio bordolese a base di Merlot di Craggy Range, con uve dei Gimblett Gravels, i terreni ghiaiosi di Hawke’s Bay.",
+    quiz: [{ q: "Quale monte, noto nella leggenda maori come un gigante addormentato, si erge alle spalle della cantina di Craggy Range Sophia?", a: "Il Te Mata Peak", x: ["Il monte Ruapehu", "Il monte Cook", "Il monte Taranaki"] }],
+  },
+  sh_temata_coleraine: {
+    fact: "Pioniere degli assemblaggi bordolesi neozelandesi, prodotto da Te Mata Estate, gestita dalla famiglia Buck a Hawke’s Bay.",
+    quiz: [{ q: "Qual è la prima annata del Te Mata Coleraine?", a: "1982", x: ["1952", "2002", "2012"] }],
+  },
+  sh_stoneleigh_sb: {
+    fact: "Prende il nome dai vigneti su antichi letti di fiume sassosi della zona di Rapaura, a Marlborough. Si dice che i sassi scaldati di giorno cedano calore di notte, aiutando l’uva a maturare.",
+    quiz: [{ q: "Quale caratteristica del vigneto è legata al nome di Stoneleigh Sauvignon Blanc?", a: "Un terreno pieno di sassi tondi di un antico letto di fiume", x: ["Dune di sabbia in riva al mare", "Pendii coperti di cenere vulcanica", "Terrazze su una scogliera calcarea"] }],
+  },
+  sh_saintclair_sb: {
+    fact: "Cantina di famiglia di Marlborough nata nel 1994, quando i coniugi Ibbotson, che coltivavano e vendevano uva, lanciarono il loro vino.",
+    quiz: [{ q: "Da chi deriva il nome «Saint Clair» di Saint Clair Sauvignon Blanc?", a: "Da James Sinclair, il colono che per primo coltivò questa terra", x: ["Da Claire, figlia del fondatore", "Da suor Claire, missionaria francese", "Dalla regina del primo paese d’esportazione"] }],
+  },
+  sh_mtdifficulty_pn: {
+    fact: "Cantina fondata da un gruppo di viticoltori di Bannockburn, nel Central Otago. Ha preso il nome dal monte che sovrasta i vigneti.",
+    quiz: [{ q: "Di che cosa è il nome «Mt Difficulty» di Mt Difficulty Pinot Noir?", a: "Del monte che domina il vigneto", x: ["Soprannome del primo, difficile anno di coltivazione", "Una vetta himalayana scalata dal fondatore", "Una galleria di una vecchia miniera d’oro"] }],
+  },
+  sh_rippon_pn: {
+    fact: "Vigneto di famiglia sul pendio di un lago, famoso per il paesaggio da cartolina con il lago e le Alpi meridionali sullo sfondo.",
+    quiz: [{ q: "Su quale lago si affaccia il vigneto del Rippon Mature Vine Pinot Noir?", a: "Il lago Wanaka", x: ["Il lago Taupo", "Il lago Rotorua", "Il lago Tekapo"] }],
+  },
+  sh_sena: {
+    fact: "Vino icona del Cile nato dall’unione tra Eduardo Chadwick e Robert Mondavi, con la prima annata nel 1995. Oggi è prodotto solo dalla famiglia Chadwick.",
+    quiz: [{ q: "Quale celebre nome del vino della Napa Valley avviò Seña insieme a Eduardo Chadwick?", a: "Robert Mondavi", x: ["Jess Jackson", "Ernest Gallo", "Warren Winiarski"] }],
+  },
+  sh_donmelchor: {
+    fact: "Il Cabernet Sauvignon di punta di Concha y Toro, prima annata 1987. Nasce dai vigneti di Puente Alto, ai piedi delle Ande.",
+    quiz: [{ q: "Chi è il protagonista del nome Don Melchor?", a: "Il fondatore che creò Concha y Toro nel 1883", x: ["Un generale dell’indipendenza cilena", "Il primo capo enologo", "Il nobile spagnolo che vendette il vigneto"] }],
+  },
+  sh_montes_alpham: {
+    fact: "Il vino icona di Montes, assemblaggio bordolese uscito per la prima volta con l’annata 1996. È prodotto con le uve delle colline di Apalta, a Colchagua.",
+    quiz: [{ q: "Qual è la prima annata di Montes Alpha M?", a: "1996", x: ["1976", "2006", "2016"] }],
+  },
+  sh_montes_folly: {
+    fact: "Si chiama «Folly» (follia) perché il Syrah fu piantato sui ripidi pendii di Apalta, dove nessuno aveva mai coltivato la vite. È famoso anche per la stravagante etichetta illustrata.",
+    quiz: [{ q: "Quale pittore inglese ha disegnato l’etichetta di Montes Folly?", a: "Ralph Steadman", x: ["David Hockney", "Quentin Blake", "Banksy"] }],
+  },
+  sh_montes_purpleangel: {
+    fact: "Il vino icona di Montes prodotto con il Carmenère, vitigno simbolo del Cile. Il Carmenère fu a lungo scambiato per Merlot, finché nel 1994 se ne scoprì la vera identità.",
+    quiz: [
+      { q: "Di chi sarebbe l’angelo custode che compare su ogni etichetta Montes, come quella di Montes Purple Angel?", a: "Del cofondatore Douglas Murray", x: ["Della figlia del fondatore Aurelio Montes", "Di O’Higgins, eroe dell’indipendenza cilena", "Della regina del primo paese d’esportazione"] },
+      { q: "Con quale vitigno veniva confuso in Cile il Carmenère di Montes Purple Angel, prima della scoperta del 1994?", a: "Merlot", x: ["Malbec", "Syrah", "Pinot Nero"] },
+    ],
+  },
+  sh_closapalta: {
+    fact: "Il vino icona di Lapostolle, prima annata 1997. L’annata 2005 fu eletta al primo posto nel «Wine of the Year» di Wine Spectator nel 2008.",
+    quiz: [{ q: "Quale celebre liquore francese è stato creato dalla famiglia Marnier Lapostolle, produttrice di Clos Apalta?", a: "Grand Marnier", x: ["Cointreau", "Chartreuse", "Bénédictine"] }],
+  },
+  sh_vinedochadwick: {
+    fact: "Cabernet da vigneto singolo della famiglia Chadwick, prima annata 1999. Nel 2004, alla degustazione alla cieca di Berlino, si classificò primo davanti ai primi cru di Bordeaux.",
+    quiz: [{ q: "Che cos’era in origine il vigneto di Viñedo Chadwick?", a: "Il campo da polo del padre di Eduardo Chadwick", x: ["Un aeroporto dell’aviazione cilena", "Una miniera di rame", "L’orto di un monastero"] }],
+  },
+  sh_casaconcha_cs: {
+    fact: "Linea premium di Concha y Toro, con uve di vigneti dalla forte personalità territoriale. Il Cabernet Sauvignon viene dalle uve di Puente Alto.",
+    quiz: [{ q: "Da che cosa deriva il nome Marqués de Casa Concha?", a: "Dal titolo di marchese concesso dal re di Spagna alla famiglia Concha", x: ["Dalla chiesa accanto al primo vigneto", "Dal cognome da nubile della moglie del fondatore", "Dal soprannome del primo presidente del Cile"] }],
+  },
+  sh_santarita_120: {
+    fact: "Il nome onora i 120 patrioti che nel 1814, durante la guerra d’indipendenza, si salvarono nascondendosi nella cantina sotterranea. È uno dei vini cileni più amati in Corea.",
+    quiz: [
+      { q: "Che cosa indica il «120» di Santa Rita 120?", a: "I 120 soldati indipendentisti nascosti nella cantina", x: ["Il 120° anniversario della fondazione", "Viti di 120 anni", "120 botti di rovere"] },
+      { q: "Quale padrona della tenuta nascose nel 1814 nella cantina i soldati indipendentisti della storia di Santa Rita 120?", a: "Paula Jaraquemada", x: ["Eva Perón", "Gabriela Mistral", "Isabel Allende"] },
+    ],
+  },
+  sh_santarita_casareal: {
+    fact: "Il vino di punta che Santa Rita produce con uve di un vecchio vigneto di Cabernet ad Alto Jahuel, nella Maipo Valley.",
+    quiz: [{ q: "In che anno fu fondata Santa Rita, produttrice di Casa Real?", a: "1880", x: ["1780", "1930", "1960"] }],
+  },
+  sh_errazuriz_donmax: {
+    fact: "Il vino icona che Errázuriz produce in onore del fondatore, con uve della Aconcagua Valley.",
+    quiz: [{ q: "Chi è il protagonista del nome Errázuriz Don Maximiano?", a: "Il fondatore, che creò la cantina nel 1870", x: ["Il primo presidente del Cile", "Il primo capo enologo", "Un monaco spagnolo che lasciò in eredità il vigneto"] }],
+  },
+  sh_conosur_bicicleta: {
+    fact: "La bicicletta in etichetta rende omaggio ai lavoratori che si spostano pedalando tra i vigneti. Cono Sur, nata nel 1993, ha reso popolare il Pinot Nero cileno.",
+    quiz: [
+      { q: "Perché sull’etichetta di Cono Sur Bicicleta c’è una bicicletta?", a: "Per rendere omaggio ai lavoratori che si spostano in bici tra i vigneti", x: ["Perché il fondatore era un ciclista", "Perché è il vino ufficiale del Tour de France", "Perché c’è un vigneto a forma di bicicletta"] },
+      { q: "Che cosa significa «Cono Sur» di Cono Sur Bicicleta?", a: "Cono meridionale (l’estremo sud del Sudamerica)", x: ["Vento del sud", "Neve delle Ande", "Croce del Sud"] },
+    ],
+  },
+  sh_carmen_granreserva: {
+    fact: "Cabernet Sauvignon di Carmen, fondata nel 1850 e considerata il più antico marchio di vino del Cile.",
+    quiz: [{ q: "Da chi prende il nome Viña Carmen, produttrice della Gran Reserva?", a: "Dalla moglie del fondatore Christian Lanz", x: ["Dalla protagonista dell’opera «Carmen»", "Dalla figlia di un eroe dell’indipendenza cilena", "Dalla santa patrona della cantina"] }],
+  },
+  sh_lapostolle_alexandre: {
+    fact: "La linea principale di Lapostolle, cantina fondata in Cile nel 1994 da Alexandra Marnier Lapostolle, della famiglia del Grand Marnier.",
+    quiz: [{ q: "Quale «flying winemaker» bordolese collabora con Lapostolle, produttrice di Cuvée Alexandre, fin dalla fondazione?", a: "Michel Rolland", x: ["Émile Peynaud", "Denis Dubourdieu", "Stéphane Derenoncourt"] }],
+  },
+  sh_cousinomacul_ar: {
+    fact: "Storica cantina cilena gestita da generazioni dalla famiglia fondatrice. A Macul, dentro Santiago, restano le sue antiche cantine.",
+    quiz: [{ q: "In che anno fu fondata Cousiño-Macul, produttrice di Antiguas Reservas?", a: "1856", x: ["1756", "1926", "1976"] }],
+  },
+  sh_santacarolina_reservado: {
+    fact: "Cabernet Sauvignon quotidiano di una storica cantina cilena fondata nel 1875 da Luis Pereira.",
+    quiz: [{ q: "Da chi prende il nome Santa Carolina?", a: "Da Carolina, moglie del fondatore Luis Pereira", x: ["Dalla regina Carolina di Spagna", "Dalla prima figlia del fondatore", "Dalla madre di un eroe dell’indipendenza cilena"] }],
+  },
+  sh_leyda_garuma: {
+    fact: "Sauvignon Blanc della fresca Leyda Valley, vicina al Pacifico. Il vento freddo e la nebbia che salgono dal mare gli danno un’acidità vivace.",
+    quiz: [{ q: "Che cosa rappresenta Viña Leyda, produttrice di Leyda Single Vineyard, per la Leyda Valley?", a: "È la pioniera che vi piantò i primi vigneti", x: ["È la prima cantina del Cile", "È una cantina fondata dalla corona spagnola", "È l’unica cantina statale del Cile"] }],
+  },
+  sh_emiliana_coyam: {
+    fact: "L’assemblaggio simbolo di Emiliana, all’avanguardia nell’agricoltura biologica e biodinamica. «Coyam» in lingua mapuche significa quercia.",
+    quiz: [{ q: "Quale metodo di coltivazione si usa nei vigneti di Emiliana Coyam?", a: "Biologico e biodinamico", x: ["Coltura idroponica", "Uve geneticamente modificate", "Coltivazione in serra"] }],
+  },
+  sh_vik: {
+    fact: "L’assemblaggio icona della cantina fondata dall’imprenditore norvegese Alexander Vik. La valle di Millahue, dove si trovano i vigneti, in lingua mapuche significa «terra d’oro».",
+    quiz: [{ q: "Di quale paese è l’imprenditore Alexander Vik, fondatore della cantina che produce Vik?", a: "Norvegia", x: ["Svezia", "Danimarca", "Finlandia"] }],
+  },
+  sh_torres_santadigna: {
+    fact: "Il vino simbolo della cantina cilena fondata a Curicó nel 1979 dalla famiglia spagnola Torres.",
+    quiz: [{ q: "Di quale paese è la grande famiglia del vino Torres, produttrice di Miguel Torres Santa Digna?", a: "Spagna", x: ["Italia", "Francia", "Portogallo"] }],
+  },
+  sh_catena_adrianna: {
+    fact: "Malbec della parcella più ricca di sassi di antico letto di fiume del vigneto Adrianna, a Gualtallary, a circa 1.500 metri d’altitudine.",
+    quiz: [{ q: "Chi è l’«Adrianna» di Catena Zapata Adrianna Vineyard?", a: "La figlia più giovane di Nicolás Catena", x: ["La prima enologa della famiglia Catena", "La patrona del paese vicino al vigneto", "Una cantante di tango argentina"] }],
+  },
+  sh_catena_malbec: {
+    fact: "Nicolás Catena ha portato il Malbec argentino alla fama mondiale aprendo vigneti d’alta quota, oltre i 1.000 metri.",
+    quiz: [{ q: "In che anno Nicola Catena, capostipite della famiglia Catena, piantò il primo vigneto di Malbec a Mendoza?", a: "1902", x: ["1802", "1952", "1982"] }],
+  },
+  sh_catena_malbecargentino: {
+    fact: "Il Malbec di Catena Zapata famoso per l’etichetta che racconta la storia del Malbec attraverso quattro donne.",
+    quiz: [{ q: "Che cosa simboleggiano le quattro donne sull’etichetta di Catena Zapata Malbec Argentino?", a: "La storia del Malbec dalla Francia all’Argentina", x: ["Le quattro figure del tango", "Le quattro stagioni dell’Argentina", "I quattro santi patroni di Mendoza"] }],
+  },
+  sh_nicolascatenazapata: {
+    fact: "L’assemblaggio di punta di Catena Zapata, prima annata 1997. Unisce Malbec al Cabernet Sauvignon.",
+    quiz: [{ q: "Che cos’è «Zapata» in Nicolás Catena Zapata?", a: "Il cognome materno di Nicolás Catena", x: ["Il rivoluzionario messicano Emiliano Zapata", "Il paese dove si trova il vigneto", "Il paese italiano del nonno"] }],
+  },
+  sh_achavalferrer_altamira: {
+    fact: "Malbec da vigneto singolo della cantina fondata nel 1998 da amici argentini e italiani. Nasce dal vigneto Altamira, con vecchie viti.",
+    quiz: [{ q: "Da dove viene il nome Achával-Ferrer?", a: "Dai cognomi di due cofondatori", x: ["Dai nomi di due fiumi che attraversano il vigneto", "Dai nomi dei nonni del fondatore", "Dai nomi di due paesi del vigneto"] }],
+  },
+  sh_chevaldesandes: {
+    fact: "Vino prodotto da un grande château di Saint-Émilion insieme a Terrazas de los Andes. Unendo Malbec e Cabernet Sauvignon, punta a essere il «grand cru delle Ande».",
+    quiz: [{ q: "Quale prestigioso château di Bordeaux produce Cheval des Andes?", a: "Château Cheval Blanc", x: ["Château Lafite Rothschild", "Château Margaux", "Château Haut-Brion"] }],
+  },
+  sh_terrazas_reserva: {
+    fact: "Cantina argentina di LVMH, nata dalla prima cantina che Moët & Chandon fondò fuori dalla Francia, nel 1959.",
+    quiz: [{ q: "Quale idea esprime il nome Terrazas de los Andes (terrazze delle Ande)?", a: "Piantare ogni vitigno all’altitudine più adatta", x: ["Coltivare l’uva sommersa come in una risaia a terrazze", "Portare uve cilene oltre le Ande", "Produrre tante bottiglie quanti sono i gradini"] }],
+  },
+  sh_colome_malbec: {
+    fact: "Una delle cantine più antiche d’Argentina, fondata nel 1831, coltiva alcuni dei vigneti più alti del mondo, oltre i 2.000 metri.",
+    quiz: [{ q: "Di quale artista raccoglie esclusivamente le opere il museo all’interno della Bodega Colomé?", a: "James Turrell", x: ["Andy Warhol", "Yayoi Kusama", "Damien Hirst"] }],
+  },
+  sh_trapiche_oakcask: {
+    fact: "Cantina simbolo dell’Argentina, aperta nel 1883, e marchio di vino argentino esportato in molti paesi.",
+    quiz: [{ q: "Che cosa indica in origine in spagnolo «trapiche» di Trapiche Oak Cask Malbec?", a: "Un frantoio per spremere frutta o canna da zucchero", x: ["Un cesto per la vendemmia", "Il vento freddo delle Ande", "Una grotta per conservare il vino"] }],
+  },
+  sh_norton_reserva: {
+    fact: "Cantina fondata nel 1895 da Edmund Norton, ingegnere inglese arrivato per costruire la ferrovia. Dal 1989 appartiene a una famiglia austriaca.",
+    quiz: [{ q: "Qual è l’attività di famiglia degli austriaci che acquistarono Norton nel 1989?", a: "Il cristallo (Swarovski)", x: ["Il cioccolato", "Le bevande energetiche", "I pianoforti"] }],
+  },
+  sh_luigibosca_malbec: {
+    fact: "Cantina di famiglia fondata nel 1901 dall’immigrato spagnolo Leoncio Arizu. È ancora gestita dalla famiglia Arizu.",
+    quiz: [{ q: "Quale famiglia gestisce da generazioni Luigi Bosca?", a: "La famiglia Arizu", x: ["La famiglia Catena", "La famiglia Zuccardi", "La famiglia Chadwick"] }],
+  },
+  sh_zuccardi_concreto: {
+    fact: "Malbec fermentato e affinato solo in vasche di cemento, senza botti, per esprimere fedelmente il terroir di Paraje Altamira.",
+    quiz: [{ q: "Quale riconoscimento ha ottenuto per tre anni di fila dal 2019 la cantina della Valle de Uco di Zuccardi, produttrice di Concreto?", a: "Il primo posto nella classifica World’s Best Vineyards", x: ["Tre stelle Michelin", "Patrimonio mondiale UNESCO", "Il primo posto nel «Wine of the Year» di Wine Spectator"] }],
+  },
+  sh_alamos_malbec: {
+    fact: "Il Malbec quotidiano della famiglia Catena. Il nome viene dai pioppi piantati come frangivento ai margini dei vigneti di Mendoza.",
+    quiz: [{ q: "Che cosa significa «Alamos» di Alamos Malbec?", a: "I pioppi piantati come frangivento nel vigneto", x: ["L’acqua di disgelo delle Ande", "Una festa indigena della vendemmia", "Il paese natale del fondatore"] }],
+  },
+  sh_closdelossiete: {
+    fact: "Nasce dai vigneti creati a Vista Flores, nella Valle de Uco, dal consulente enologo bordolese Michel Rolland insieme a investitori francesi.",
+    quiz: [{ q: "Che cosa indica il «Siete» (sette) di Clos de los Siete?", a: "I sette investitori (cantine) che aderirono all’inizio", x: ["Le sette vette attorno al vigneto", "Sette vitigni", "Sette anni di affinamento"] }],
+  },
+  sh_elenemigo_malbec: {
+    fact: "Marchio creato insieme da Alejandro Vigil, capo enologo di Catena Zapata, e dalla storica Adrianna Catena.",
+    quiz: [{ q: "Che cosa significa in spagnolo «El Enemigo»?", a: "Il nemico", x: ["L’amico", "Il viandante", "Il fratello"] }],
+  },
+  sh_rutini_cabmalbec: {
+    fact: "Assemblaggio di Cabernet e Malbec di una storica cantina di Mendoza fondata nel 1885 dall’immigrato italiano Felipe Rutini.",
+    quiz: [{ q: "Da quale paese veniva Felipe Rutini, fondatore di Rutini?", a: "Italia", x: ["Spagna", "Francia", "Germania"] }],
+  },
+  sh_salentein_reserve: {
+    fact: "Cantina pioniera dell’alta Valle de Uco, oltre i 1.000 metri. Al suo interno ospita il museo d’arte «Killka».",
+    quiz: [{ q: "Di quale paese è Mijndert Pon, fondatore di Bodegas Salentein?", a: "Paesi Bassi", x: ["Belgio", "Danimarca", "Svizzera"] }],
+  },
+  sh_kaiken_ultra: {
+    fact: "Malbec della cantina fondata nel 2002 a Mendoza, al di là delle Ande, da Aurelio Montes della cilena Montes.",
+    quiz: [{ q: "Da che cosa deriva il nome «Kaiken» di Kaiken Ultra Malbec?", a: "Da un’oca selvatica della Patagonia che attraversa le Ande", x: ["Dal dio sole degli indigeni andini", "Dal vento caldo di Mendoza", "Dal cavallo del fondatore"] }],
+  },
+  sh_trivento_reserve: {
+    fact: "Malbec della cantina fondata nel 1996 a Mendoza, in Argentina, dalla cilena Concha y Toro.",
+    quiz: [{ q: "Che cosa significa «Trivento» di Trivento Reserve Malbec?", a: "I tre venti che soffiano sui vigneti di Mendoza", x: ["Tre fratelli fondatori", "Tre fiumi", "Tre vendemmie all’anno"] }],
+  },
+  sh_garzon_tannat: {
+    fact: "Il Tannat, arrivato dal sud-ovest della Francia, è diventato il vitigno simbolo dell’Uruguay. Garzón ha creato i suoi vigneti su colline vicine all’Atlantico.",
+    quiz: [{ q: "Quale celebre località balneare uruguaiana si trova vicino ai vigneti di Bodega Garzón Tannat?", a: "Punta del Este", x: ["Copacabana", "Mar del Plata", "Viña del Mar"] }],
+  },
+  sh_miolo_lote43: {
+    fact: "Il vino simbolo del Vale dos Vinhedos, la prima indicazione d’origine del Brasile. Il nome viene dal numero del lotto del primo terreno acquistato dal fondatore.",
+    quiz: [{ q: "Qual è l’origine della famiglia Miolo, produttrice di Lote 43?", a: "Immigrati italiani arrivati in Brasile a fine Ottocento", x: ["Nobili della corte portoghese", "Missionari luterani tedeschi", "Immigrati giapponesi"] }],
+  },
+  sh_lacetto_nebbiolo: {
+    fact: "Cantina simbolo della Valle de Guadalupe, cuore del vino messicano. È particolarmente famosa per il Nebbiolo, vitigno italiano.",
+    quiz: [{ q: "Da dove veniva Angelo Cetto, fondatore di L.A. Cetto?", a: "Dall’Italia", x: ["Dalla Spagna", "Dalla Francia", "Dalla Germania"] }],
+  },
+  sh_casamadero_3v: {
+    fact: "Rosso che assembla tre vitigni, prodotto dalla cantina più antica del continente americano.",
+    quiz: [{ q: "In che anno fu fondata Casa Madero, la cantina più antica delle Americhe, produttrice di 3V?", a: "1597", x: ["1697", "1797", "1897"] }],
+  },
+  sh_kanonkop_paulsauer: {
+    fact: "L’assemblaggio bordolese simbolo del Sudafrica. Il nome viene da Paul Sauer, politico proprietario della fattoria Kanonkop.",
+    quiz: [{ q: "Da dove viene il nome «Kanonkop» di Kanonkop Paul Sauer?", a: "Da una collina da cui si sparava un colpo di cannone all’arrivo delle navi", x: ["Da una fabbrica di cannoni della guerra anglo-boera", "Da acini tondi come palle di cannone", "Dal soprannome militare del primo proprietario"] }],
+  },
+  sh_kanonkop_pinotage: {
+    fact: "Il vino simbolo di Kanonkop, grande nome del Pinotage, vitigno creato in Sudafrica. Fermenta in tini aperti, con follature manuali delle bucce.",
+    quiz: [{ q: "Con quale vitigno fu incrociato il Pinot Nero nel 1925 per creare il Pinotage di Kanonkop?", a: "Cinsault (allora chiamato in Sudafrica «Hermitage»)", x: ["Syrah", "Merlot", "Gamay"] }],
+  },
+  sh_meerlust_rubicon: {
+    fact: "L’assemblaggio bordolese di Meerlust, tenuta tramandata dalla famiglia Myburgh dal 1757. La prima annata è il 1980.",
+    quiz: [{ q: "Quale significato racchiude il nome «Rubicon» di Meerlust Rubicon?", a: "Una decisione irrevocabile (Cesare che attraversa il Rubicone)", x: ["Il colore rosso rubino", "Il nome del fiume accanto al vigneto", "Il vezzeggiativo della figlia del fondatore"] }],
+  },
+  sh_kleinconstantia_vdc: {
+    fact: "Nel 1986 ha fatto rinascere il leggendario vino dolce di Constantia, conteso dalle corti europee tra Settecento e Ottocento. È imbottigliato in una bottiglia da 500 ml ispirata a quelle antiche.",
+    quiz: [
+      { q: "Quale personaggio avrebbe bevuto con piacere il vino di Constantia, antenato del Vin de Constance, anche in esilio a Sant’Elena?", a: "Napoleone", x: ["Luigi XVI", "L’ammiraglio Nelson", "Bismarck"] },
+      { q: "Quale scrittrice citò il vino di Constantia, antenato del Vin de Constance, nel romanzo «Ragione e sentimento»?", a: "Jane Austen", x: ["Charlotte Brontë", "George Eliot", "Virginia Woolf"] },
+    ],
+  },
+  sh_sadie_columella: {
+    fact: "Assemblaggio a base di Syrah che Eben Sadie ottiene da uve di tutto lo Swartland. Con la prima annata nel 2000 è diventato il simbolo dell’innovazione del vino sudafricano.",
+    quiz: [{ q: "Da chi prende il nome Columella di Sadie Family?", a: "Da uno scrittore romano autore di un’opera sull’agricoltura", x: ["Dal capitano olandese che scoprì lo Swartland", "Dal nonno del fondatore", "Da un dio greco del vino"] }],
+  },
+  sh_boekenhoutskloof_cs: {
+    fact: "Cantina di Franschhoek il cui nome in afrikaans significa «valle del faggio del Capo (boekenhout)».",
+    quiz: [{ q: "Quali sette oggetti sono raffigurati in fila sull’etichetta di Boekenhoutskloof?", a: "Sedie", x: ["Grappoli d’uva", "Botti", "Bicchieri da vino"] }],
+  },
+  sh_rustenberg_jxm: {
+    fact: "L’assemblaggio bordolese di Rustenberg, tenuta curata dalla famiglia Barlow dal 1941, con uve delle pendici del Simonsberg.",
+    quiz: [{ q: "Chi era John X. Merriman, che dà il nome al John X Merriman di Rustenberg?", a: "L’ultimo primo ministro della Colonia del Capo, proprietario di questa fattoria", x: ["Il primo professore di enologia del Sudafrica", "Un capitano della Compagnia britannica delle Indie Orientali", "Il capitano della nazionale di rugby"] }],
+  },
+  sh_vergelegen_v: {
+    fact: "Il rosso di punta della tenuta fondata nel 1700 dal governatore del Capo Willem Adriaan van der Stel.",
+    quiz: [{ q: "Che cosa significa in olandese «Vergelegen» di Vergelegen V?", a: "Luogo lontano", x: ["Valle verde", "Collina del vento", "Fattoria del re"] }],
+  },
+  sh_hamiltonrussell_pn: {
+    fact: "Una delle cantine più meridionali d’Africa, fondata nel 1975 da Tim Hamilton Russell in una fresca valle vicino al mare. Produce solo Pinot Nero e Chardonnay.",
+    quiz: [{ q: "Che cosa significa «Hemel-en-Aarde», dove si trova il vigneto del Pinot Nero di Hamilton Russell?", a: "Cielo e terra", x: ["Mare e montagna", "Sole e luna", "Vento e pioggia"] }],
+  },
+  sh_mullineux_straw: {
+    fact: "Vino dolce che i coniugi Chris e Andrea Mullineux producono con Chenin Blanc dello Swartland.",
+    quiz: [{ q: "Come si trattano le uve per produrre il Mullineux Straw Wine?", a: "Si fanno appassire su stuoie di paglia per concentrarne gli zuccheri", x: ["Si lasciano gelare sulla pianta", "Si mettono in salamoia nell’acqua di mare", "Si interrano per passare l’inverno"] }],
+  },
+  sh_grahambeck_brut: {
+    fact: "Il portabandiera del «Cap Classique», lo spumante sudafricano rifermentato in bottiglia come lo champagne.",
+    quiz: [{ q: "In quale evento storico del 1994 si brindò con Graham Beck Brut?", a: "La festa per l’insediamento del presidente Nelson Mandela", x: ["Il matrimonio del principe di Galles", "La chiusura delle Olimpiadi di Sydney", "L’elezione di un papa"] }],
+  },
+  sh_kwv_cathedral: {
+    fact: "Colosso del vino sudafricano nato nel 1918 come cooperativa di viticoltori. «Cathedral Cellar» prende il nome da una vecchia cantina con soffitto a volta come quello di una cattedrale.",
+    quiz: [{ q: "Di che cosa è sigla «KWV» di KWV Cathedral Cellar?", a: "Della cooperativa dei viticoltori sudafricani", x: ["Di una società di esportazione del vino del Capo", "Di un’associazione reale del vino", "Di una banca del vino di Kimberley"] }],
+  },
+  sh_nederburg_winemasters: {
+    fact: "Cantina storica di Paarl, fondata nel 1791. Grande produttore, ha guidato per decenni l’industria del vino sudafricana.",
+    quiz: [{ q: "Quale grande evento del vino sudafricano ha avviato per la prima volta Nederburg nel 1975?", a: "L’asta del vino Nederburg", x: ["La maratona del vino di Città del Capo", "La festa della pigiatura", "Il treno del vino"] }],
+  },
+  sh_chocolateblock: {
+    fact: "Assemblaggio a base di Syrah con Grenache, Cinsault, Cabernet Sauvignon e Viognier. Intenso e morbido, è tra i vini più popolari del Sudafrica.",
+    quiz: [{ q: "Quale marchio di vino quotidiano produce anche la cantina di The Chocolate Block?", a: "Porcupine Ridge", x: ["Yellow Tail", "19 Crimes", "Barefoot"] }],
+  },
+  sh_warwick_trilogy: {
+    fact: "L’assemblaggio bordolese di Warwick Estate, reso celebre da Norma Ratcliffe, una delle prime donne enologhe del Sudafrica.",
+    quiz: [{ q: "Che coppa è la «Wedding Cup», simbolo di Warwick Estate, produttrice di Trilogy?", a: "Una coppa doppia da cui due persone devono bere insieme senza versare", x: ["Un bicchiere che gli sposi rompono insieme", "Una coppa ricavata da una vite centenaria", "Un calice di chiesa ispirato al Graal"] }],
+  },
+  sh_inniskillin_riesling: {
+    fact: "Prodotto con Riesling vendemmiato ghiacciato nelle notti d’inverno, unisce a una dolcezza intensa l’acidità tipica del vitigno.",
+    quiz: [{ q: "Chi fondò Inniskillin, produttrice del Riesling Icewine?", a: "Donald Ziraldo e Karl Kaiser", x: ["Andrew Peller e Gary Pillitteri", "Allan Jackson e Don Triggs", "Robert Mondavi e Philippe de Rothschild"] }],
+  },
+  sh_peller_vidal_icewine: {
+    fact: "Icewine della cantina del Niagara di una grande azienda vinicola canadese fondata da Andrew Peller.",
+    quiz: [{ q: "Qual era il paese natale di Andrew Peller, fondatore dell’azienda che produce Peller Estates Vidal Icewine?", a: "Ungheria", x: ["Germania", "Italia", "Polonia"] }],
+  },
+  sh_pillitteri_cf_icewine: {
+    fact: "Icewine rosso ottenuto dal vitigno a bacca rossa Cabernet Franc. Pillitteri è una cantina di famiglia del Niagara particolarmente dedicata all’icewine.",
+    quiz: [{ q: "Qual era la terra natale di Gary Pillitteri, fondatore di Pillitteri?", a: "La Sicilia", x: ["Creta", "Madeira", "L’Andalusia"] }],
+  },
+  sh_missionhill_oculus: {
+    fact: "L’assemblaggio bordolese di punta di Mission Hill, cantina con un alto campanile sulle rive del lago Okanagan.",
+    quiz: [{ q: "Quale celebre bevanda ha creato l’azienda fondata da Anthony von Mandl, proprietario di Mission Hill?", a: "White Claw (hard seltzer)", x: ["Red Bull", "Corona Extra", "Smirnoff Ice"] }],
+  },
+  sh_jacksontriggs_icewine: {
+    fact: "Icewine di Vidal prodotto da una grande cantina di Niagara-on-the-Lake.",
+    quiz: [{ q: "Da dove viene il nome «Jackson-Triggs» di Jackson-Triggs Vidal Icewine?", a: "Dai cognomi dei cofondatori Allan Jackson e Don Triggs", x: ["Dai nomi di due fiumi del Niagara", "Dai cognomi da nubili dei coniugi fondatori", "Dai cognomi dei due proprietari del primo vigneto"] }],
+  },
+  sh_mercian_koshu: {
+    fact: "Il marchio simbolo del vino giapponese, gestito dal gruppo Kirin. Con il vitigno autoctono Koshu produce un bianco delicato e pulito.",
+    quiz: [{ q: "In quale paese inviò due giovani a studiare enologia nel 1877 l’azienda da cui nasce Mercian, produttrice di Château Mercian Koshu?", a: "Francia", x: ["Germania", "Italia", "Stati Uniti"] }],
+  },
+  sh_grace_koshu: {
+    fact: "Koshu di Grace Wine, aperta a Katsunuma nel 1923. È il portabandiera che ha portato il vino giapponese sulla scena mondiale.",
+    quiz: [{ q: "Quale famiglia gestisce da generazioni Grace Wine, produttrice di Grace Koshu?", a: "La famiglia Misawa", x: ["La famiglia Suzuki", "La famiglia Sato", "La famiglia Toyoda"] }],
+  },
+  sh_suntory_tominooka: {
+    fact: "Koshu della cantina Tomi no Oka, curata direttamente da Suntory su una collina di Yamanashi.",
+    quiz: [{ q: "Quale montagna si vede nei giorni limpidi dalla collina della cantina Suntory Tomi no Oka?", a: "Il Fuji", x: ["L’Aso", "Il Tateyama", "L’Hakusan"] }],
+  },
+  sh_aoyun: {
+    fact: "Assemblaggio a base di Cabernet Sauvignon che LVMH produce con uve di villaggi dello Yunnan, ai piedi dell’Himalaya, oltre i 2.000 metri. La prima annata è il 2013.",
+    quiz: [
+      { q: "Che cosa significa il nome Ao Yun (敖云)?", a: "Volare sopra le nuvole", x: ["Drago rosso", "Sorgente del cielo", "Montagna innevata"] },
+      { q: "Quale montagna sacra del buddismo tibetano si erge vicino ai vigneti di Ao Yun?", a: "Il Meili Xueshan", x: ["L’Everest", "L’Annapurna", "Il Kailash"] },
+    ],
+  },
+  sh_changyu_moser: {
+    fact: "Château costruito ai piedi dei monti Helan, nel Ningxia, da Changyu, la prima cantina moderna della Cina, fondata nel 1892. È prodotto insieme al vinificatore austriaco Lenz Moser.",
+    quiz: [
+      { q: "Che cosa indica «XV» in Changyu Moser XV?", a: "Lenz Moser, quindicesima generazione della famiglia austriaca Moser", x: ["15 anni di affinamento", "La quindicesima annata", "Un assemblaggio di 15 vigneti"] },
+      { q: "Chi fondò Changyu, produttrice del Moser XV, nel 1892?", a: "Il grande mercante della diaspora cinese Zhang Bishi (张弼士)", x: ["L’imperatore Guangxu della dinastia Qing", "Un missionario francese", "Un mercante giapponese"] },
+    ],
+  },
 };
 
 export default T;

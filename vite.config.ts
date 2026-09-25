@@ -68,6 +68,17 @@ export default defineConfig({
   },
   build: {
     target: "es2022",
-    chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        // 한 파일이 너무 크지 않게: three.js · 와인 데이터 · 게임 코드를 따로 받는다 (병렬로 받고, 데이터만 바뀌어도 three 는 캐시에 남는다)
+        manualChunks(id) {
+          if (id.includes("node_modules/three")) return "three";
+          const part = id.match(/\/src\/data\/more\/(\w+)\.ts$/);
+          if (part && part[1] !== "index") return `wines-${part[1]}`;
+          return undefined;
+        },
+      },
+    },
   },
 });
