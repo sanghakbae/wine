@@ -1,0 +1,6 @@
+node_modules
+dist
+*.tsbuildinfo
+.snaps
+.i18n-src
+.env.local

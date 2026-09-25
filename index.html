@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#120d0c" />
+    <meta name="description" content="병 모양과 라벨만 보고 맞히는 3D 와인 퀴즈" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Blind Bottle" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" type="image/svg+xml" href="icon.svg" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <title>블라인드 보틀 — Wine Quiz</title>
+    <style>
+      /* 첫 로딩 화면 (스크립트가 뜨기 전) */
+      html, body { margin: 0; height: 100%; background: #120d0c; }
+      .boot { position: fixed; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 42%, #3a2620 0%, #120d0c 70%); color: #d9b56a; font: 600 12px/1.4 -apple-system, "Apple SD Gothic Neo", sans-serif; letter-spacing: 0.35em; }
+      .boot img { width: 96px; height: 96px; display: block; margin: 0 auto 14px; border-radius: 20px; animation: bob 1.6s ease-in-out infinite; }
+      @keyframes bob { 50% { transform: translateY(-6px); } }
+    </style>
+  </head>
+  <body>
+    <div id="app"><div class="boot"><div><img src="icon-192.png" alt="" />BLIND BOTTLE</div></div></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
