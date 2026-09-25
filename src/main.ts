@@ -21,6 +21,11 @@ import { startAnalytics, track } from "./analytics";
 import { standalone } from "./ui/install";
 import { startAuth } from "./auth";
 import { cacheWineTexts, watchUpdates } from "./ui/update";
+import { polyfillCountryFlagEmojis } from "country-flag-emoji-polyfill";
+import flagFont from "country-flag-emoji-polyfill/dist/TwemojiCountryFlags.woff2?url";
+
+// 랭킹의 국기: Windows 크롬·엣지는 국기 이모지 대신 "KR" 글자를 그리므로 그때만 국기 글꼴(직접 호스팅)을 붙인다
+polyfillCountryFlagEmojis("Twemoji Country Flags", flagFont);
 
 async function boot() {
   // 라벨 캔버스에 글꼴이 빠지지 않도록, 그리고 고른 언어의 와인 해설을 먼저 불러 둔다

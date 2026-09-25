@@ -355,9 +355,11 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 .lr-note { margin: 0.2em 0 0; color: var(--muted); font-size: 0.9em; }
 
 /* 랭킹 줄의 국가 (앞 3자) */
-.rank-list .cc { width: 3.2em; flex: none; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; }
+/* 랭킹의 나라는 국기로 (Windows 는 국기 이모지가 없어 main.ts 에서 국기 글꼴을 붙인다) */
+.rank-list .cc, .live-rank li .cc { flex: none; font-style: normal; text-align: center; line-height: 1; font-family: "Twemoji Country Flags", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.rank-list .cc { width: 1.4em; font-size: 18px; }
 .rank-list .nk { flex: 1; }
-.live-rank li .cc { font-style: normal; width: 2.6em; flex: none; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.live-rank li .cc { width: 1.35em; font-size: 1.1em; }
 
 /* 첫 화면 아래 링크: 한 줄 (셀러 · 랭킹 · 계정 삭제 · 개인정보 처리방침) */
 .panel.landing .links { flex-wrap: nowrap; gap: 4px; white-space: nowrap; }

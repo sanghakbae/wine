@@ -34,3 +34,7 @@ npm run dev
 
 `main` 에 푸시하면 `.github/workflows/deploy.yml` 이 빌드해서 GitHub Pages 로 올린다.
 Firebase 설정은 저장소 변수 `VITE_FIREBASE_*` 에서 읽는다.
+
+## 출처
+
+- 랭킹의 국기 (Windows 용 국기 글꼴): [country-flag-emoji-polyfill](https://github.com/talkjs/country-flag-emoji-polyfill) (MIT). 국기 그림은 [Twemoji](https://github.com/twitter/twemoji) — © Twitter, Inc and other contributors, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

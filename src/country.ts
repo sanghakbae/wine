@@ -61,6 +61,12 @@ export function countryLabel(cc: string): string {
   }
 }
 
+/** 나라 코드 → 국기 이모지 (KR → 🇰🇷). 두 글자 대문자가 아니면 빈 문자열 */
+export function flagOf(cc: string): string {
+  if (!/^[A-Z]{2}$/.test(cc)) return "";
+  return String.fromCodePoint(...Array.from(cc, (c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+}
+
 /** 길면 앞 3자까지만 (한글·이모지도 글자 단위로 자른다) */
 export function short3(s: string): string {
   const chars = Array.from(s.trim());

@@ -36,7 +36,7 @@ import type { Music } from "../audio/music";
 import { bottleIcon } from "./icon";
 import { copyBanner } from "./promo";
 import { install, onInstallChange } from "./install";
-import { countryLabel, myCountry, short3 } from "../country";
+import { countryLabel, flagOf, myCountry, short3 } from "../country";
 import { updatePending } from "./update";
 import { LoginError, authReady, currentUser, deleteAccount, onUser, reauthenticate, signIn, signOut } from "../auth";
 import { track } from "../analytics";
@@ -274,7 +274,7 @@ export class App {
         <ol>${top10
           .map(
             (r, i) =>
-              `<li class="${r.mine ? "mine" : ""}"><b>${i + 1}</b><i class="cc" title="${esc(countryLabel(r.cc))}">${esc(short3(countryLabel(r.cc)))}</i><span>${esc(short3(r.nick))}</span><em>${r.score.toLocaleString(lang())}</em></li>`,
+              `<li class="${r.mine ? "mine" : ""}"><b>${i + 1}</b><i class="cc" role="img" title="${esc(countryLabel(r.cc))}" aria-label="${esc(countryLabel(r.cc))}">${flagOf(r.cc)}</i><span>${esc(short3(r.nick))}</span><em>${r.score.toLocaleString(lang())}</em></li>`,
           )
           .join("")}</ol>
         ${myRank > 10 ? `<p class="lr-me"><span>${t("rank_me")}</span><em>${myScore.toLocaleString(lang())}</em></p>` : ""}`;
@@ -768,7 +768,7 @@ export class App {
       ol.innerHTML = list
         .map(
           (x, i) =>
-            `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="cc" title="${esc(countryLabel(x.cc))}">${esc(short3(countryLabel(x.cc)))}</span><span class="nk">${esc(short3(x.nick))}</span><span class="cr">${x.correct}/${x.total}</span><em>${x.score.toLocaleString(lang())}</em></li>`,
+            `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="cc" role="img" title="${esc(countryLabel(x.cc))}" aria-label="${esc(countryLabel(x.cc))}">${flagOf(x.cc)}</span><span class="nk">${esc(short3(x.nick))}</span><span class="cr">${x.correct}/${x.total}</span><em>${x.score.toLocaleString(lang())}</em></li>`,
         )
         .join("");
   }
