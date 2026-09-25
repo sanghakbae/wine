@@ -239,12 +239,15 @@ export class App {
       // 불러오는 중이거나 못 불러왔을 때는 순위를 짐작해 보여 주지 않는다 (빈 목록이면 늘 1위로 보이니까)
       this.liveRank.innerHTML = `${head}<p class="lr-note">${this.liveTop === undefined ? "…" : t("rank_fail")}</p>`;
     } else {
-      // 서버 상위 기록 사이에 내 현재 점수를 끼워 넣고 10위까지만 보여 준다
+      // 서버 상위 기록 사이에 내 기록을 끼워 넣고 10위까지만 보여 준다.
+      // 랭킹은 사람마다 최고 기록이라 내 줄도 최고 기록(서버·기기 중 큰 값)을 보여 주고, 이번 판이 넘어서면 실시간으로 오른다
       const me = currentUser();
       const others = this.liveTop.filter((x) => !(me && x.uid === me.uid));
-      const myRank = others.filter((x) => x.score > this.score).length + 1;
+      const mine = this.liveTop.find((x) => me && x.uid === me.uid)?.score ?? 0;
+      const myScore = Math.max(mine, store.best(m.level), this.score);
+      const myRank = others.filter((x) => x.score > myScore).length + 1;
       const rows = others.map((x) => ({ nick: x.nick, cc: x.cc, score: x.score, mine: false }));
-      rows.splice(myRank - 1, 0, { nick: t("rank_me"), cc: myCountry(), score: this.score, mine: true });
+      rows.splice(myRank - 1, 0, { nick: t("rank_me"), cc: myCountry(), score: myScore, mine: true });
       const top10 = rows.slice(0, 10);
       this.liveRank.innerHTML = `${head}
         <ol>${top10
@@ -253,7 +256,7 @@ export class App {
               `<li class="${r.mine ? "mine" : ""}"><b>${i + 1}</b><i class="cc" title="${esc(countryLabel(r.cc))}">${esc(short3(countryLabel(r.cc)))}</i><span>${esc(short3(r.nick))}</span><em>${r.score.toLocaleString(lang())}</em></li>`,
           )
           .join("")}</ol>
-        ${myRank > 10 ? `<p class="lr-me"><span>${t("rank_me")}</span><em>${this.score.toLocaleString(lang())}</em></p>` : ""}`;
+        ${myRank > 10 ? `<p class="lr-me"><span>${t("rank_me")}</span><em>${myScore.toLocaleString(lang())}</em></p>` : ""}`;
     }
     this.placeLiveRank();
   }
