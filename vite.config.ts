@@ -57,8 +57,9 @@ export default defineConfig({
       workbox: {
         // 글꼴은 woff2 만 (woff 는 같은 글꼴의 구형 포맷)
         globPatterns: ["**/*.{js,css,html,woff2,png,svg,webmanifest}"],
-        // 언어별 와인 설명(8개 언어, 약 3MB)은 미리 받지 않고 실제로 쓰는 언어만 받아 둔다
-        globIgnores: ["**/i18n-*.js"],
+        // 언어별 와인 설명(8개 언어, 약 3MB)은 미리 받지 않고 실제로 쓰는 언어만 받아 둔다.
+        // 영어만은 미리 받아 둔다: 오프라인에서 내 언어 파일이 없을 때 대신 쓰는 기본 설명이다
+        globIgnores: ["ja", "zh", "es", "fr", "de", "it", "pt"].map((l) => `**/i18n-${l}-*.js`),
         runtimeCaching: [
           {
             urlPattern: /\/assets\/i18n-[\w-]+\.js$/,

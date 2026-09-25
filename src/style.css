@@ -147,7 +147,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 .cel-item span { display: flex; flex-direction: column; min-width: 0; }
 .cel-item b { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cel-item small { font-size: 11px; color: var(--muted); }
-.cel-item.unknown b { color: var(--muted); letter-spacing: 0.2em; }
 
 /* 음악 켜기/끄기 */
 .sound { position: absolute; z-index: 4; top: max(8px, env(safe-area-inset-top)); right: 12px; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 999px; background: rgba(20,14,12,0.6); color: var(--gold); }
@@ -189,12 +188,15 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 /* 상단 줄은 어느 화면에서나 가로폭 100%. 오른쪽 기둥 패널은 상단 줄 아래 영역에만 놓인다 */
 :root { --hud-h: calc(48px + env(safe-area-inset-top)); }
 @media (min-width: 900px), (orientation: landscape) and (max-height: 520px) {
-  .panel { max-height: calc(100% - var(--hud-h) * 2 - 16px); }
+  /* 옆 패널은 위아래로 HUD + 소리 버튼 자리를 비워 둔다 (패널이 길어져도 소리 버튼과 겹치지 않게) */
+  .panel { max-height: calc(100% - (var(--hud-h) + 36px) * 2); }
   .hud { padding-right: max(16px, env(safe-area-inset-right)); }
   .sound { right: max(16px, env(safe-area-inset-right)); }
 }
 @media (orientation: landscape) and (max-height: 520px) {
   .panel { top: var(--hud-h); max-height: calc(100% - var(--hud-h) - 8px); }
+  /* 가로 폰: 패널이 HUD 바로 아래부터 차므로 소리 버튼은 패널 왼쪽 옆에 둔다 */
+  .hud:not([hidden]) ~ .sound { right: calc(max(8px, env(safe-area-inset-right)) + min(46vw, 400px) + 8px); }
 }
 
 /* ───────── 랭킹 */

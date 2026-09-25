@@ -156,6 +156,7 @@ export class App {
     window.addEventListener("resize", () => {
       this.syncInsets();
       fitLines(this.panel);
+      this.placeLiveRank(); // 글자 크기가 화면 높이를 따르므로 높이만 바뀌어도 다시 잰다
     });
     window.addEventListener("keydown", (e) => this.onKey(e));
     this.showTitle();
@@ -191,9 +192,8 @@ export class App {
   /** 로그인·계정 삭제 팝업이 열려 있는 동안 (이때 새로고침하면 팝업이 고아가 된다) */
   private busy = false;
 
-  /** 새 버전으로 새로고침해도 되는 때: 첫 화면에 아무 창도 없이 있을 때.
-   *  결과 화면은 랭킹 등록이 끝나지 않았을 수 있어 빼고, 손님이 쌓은 기록은 메모리에만 있어
-   *  새로고침하면 사라지므로 그때는 다음 방문까지 새 버전을 미룬다 */
+  /** 새 버전으로 새로고침해도 되는 때: 첫 화면에 아무 창도 없이 있고, 팝업·랭킹 등록이 끝났을 때.
+   *  손님이 쌓은 기록은 메모리에만 있어 새로고침하면 사라지므로 그때는 다음 방문까지 새 버전을 미룬다 */
   get idle() {
     if (!store.saving && (store.plays > 0 || store.foundCount > 0)) return false;
     // 결과 화면에서 바로 첫 화면으로 와도 랭킹 등록이 끝날 때까지는 새로고침하지 않는다
@@ -201,10 +201,17 @@ export class App {
     return this.view === "landing" && this.cellar.hidden && !this.busy;
   }
 
+  /** 미뤄 둔 새 버전이 있으면 지금 새로고침한다 (창을 닫거나 팝업·등록이 끝나 한가해질 때마다 부른다) */
+  private maybeReload() {
+    if (!updatePending() || !this.idle) return false;
+    location.reload();
+    return true;
+  }
+
   private showTitle() {
     this.view = "landing";
     this.cellar.hidden = true;
-    if (updatePending() && this.idle) return location.reload();
+    if (this.maybeReload()) return;
     this.liveRank.hidden = true;
     this.hud.hidden = true;
     this.hero.hidden = false;
@@ -310,6 +317,7 @@ export class App {
       alert(t(reason === "inapp" ? "login_inapp" : reason === "popup" ? "login_popup" : "login_fail"));
     } finally {
       this.busy = false;
+      this.maybeReload();
     }
   }
 
@@ -342,6 +350,7 @@ export class App {
       await this.deleteAccountSteps();
     } finally {
       this.busy = false;
+      this.maybeReload();
     }
   }
 
@@ -378,7 +387,7 @@ export class App {
   /** 셀러·랭킹 창 닫기: 랜딩 위에서 열었으면 병을 바꾸지 않고 타이머만 다시 돌린다 */
   private closeOverlay() {
     this.cellar.hidden = true;
-    if (this.view === "landing") this.startLandingTimer();
+    if (this.view === "landing" && !this.maybeReload()) this.startLandingTimer();
   }
 
   private renderLanding() {
@@ -444,8 +453,16 @@ export class App {
           track("login_click", { where: "landing" });
           return this.login();
         case "logout":
-          await store.flush();
-          return signOut();
+          // 저장을 마치고 로그아웃할 때까지 새 버전 새로고침을 미룬다 (중간에 새로고침되면 로그인 상태로 남는다)
+          this.busy = true;
+          try {
+            await store.flush();
+            await signOut();
+          } finally {
+            this.busy = false;
+            this.maybeReload();
+          }
+          return;
         case "delete":
           return this.confirmDelete();
       }
@@ -632,7 +649,7 @@ export class App {
     const rank = await submitScore(m.level, user.name, myCountry(), pick.score, pick.correct, this.results.length, lang());
     if (this.submittingGame === game) this.submittingGame = null;
     // 등록하는 동안 미뤄 둔 새 버전: 이제 첫 화면에 가만히 있으면 새로 불러온다
-    if (updatePending() && this.idle) return location.reload();
+    if (this.maybeReload()) return;
     if (game !== this.gameNo) return;
     track("rank_submit", { level: m.level, score: this.score, ok: rank !== null });
     this.submitted = rank ?? 0;
@@ -830,8 +847,9 @@ export class App {
   }
 
   private viewWine(w: Wine) {
-    const found = store.isFound(w.id);
-    track("wine_view", { wine: w.id, found });
+    // 셀러를 연 뒤 로그아웃 등으로 기록이 바뀌었으면 못 맞힌 와인은 열지 않고 셀러를 다시 그린다
+    if (!store.isFound(w.id)) return this.openCellar();
+    track("wine_view", { wine: w.id });
     this.view = "wine";
     this.liveRank.hidden = true;
     this.hero.hidden = true;
@@ -839,15 +857,11 @@ export class App {
     this.vignette.hidden = true;
     this.cellar.hidden = true;
     this.hud.hidden = true;
-    this.stage.show(w, found ? { name: false, info: false } : { name: true, info: true }, pickVintage(w));
+    this.stage.show(w, { name: false, info: false }, pickVintage(w));
     const n = wineQuiz(w, store.level).length;
     this.panel.className = "panel view";
     this.panel.innerHTML = `
-      ${
-        found
-          ? this.detailCard(w)
-          : `<div class="detail"><div class="dname">${bottleIcon(w, 46, false)}<div><b>???</b><small>${t("cel_unknown")}</small></div></div><p class="fact">${t("cel_unknownTip")}</p></div>`
-      }
+      ${this.detailCard(w)}
       <div class="row">
         <button class="primary" data-act="quiz">${t("cel_quiz", { n })}</button>
         <button data-act="back">${t("cel_back")}</button>

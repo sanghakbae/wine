@@ -106,6 +106,8 @@ onUser(async (u) => {
     uid = u.uid;
     const legacy = read<Plain>(LEGACY_KEY);
     state = merge(guest, read<Plain>(cacheKey(uid)), legacy);
+    // 서버 기록을 받기 전에 먼저 기기에 남긴다 (그 사이 새로고침돼도 손님으로 한 판이 사라지지 않게)
+    write(cacheKey(uid), plain(state));
     listeners.forEach((f) => f());
     const remote = await loadProgress();
     if (uid !== u.uid) return;
