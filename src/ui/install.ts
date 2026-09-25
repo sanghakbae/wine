@@ -10,8 +10,8 @@ interface InstallPrompt extends Event {
 let deferred: InstallPrompt | null = null;
 const listeners = new Set<() => void>();
 
+// 첫 화면에 설치 버튼이 없으니 preventDefault 하지 않는다: 브라우저가 자체 설치 안내(미니 인포바 등)를 띄우게 둔다
 window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
   deferred = e as InstallPrompt;
   listeners.forEach((f) => f());
 });

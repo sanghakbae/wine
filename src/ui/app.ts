@@ -196,6 +196,8 @@ export class App {
    *  새로고침하면 사라지므로 그때는 다음 방문까지 새 버전을 미룬다 */
   get idle() {
     if (!store.saving && (store.plays > 0 || store.foundCount > 0)) return false;
+    // 결과 화면에서 바로 첫 화면으로 와도 랭킹 등록이 끝날 때까지는 새로고침하지 않는다
+    if (this.submittingGame !== null) return false;
     return this.view === "landing" && this.cellar.hidden && !this.busy;
   }
 
@@ -623,9 +625,14 @@ export class App {
     if (!user || m.kind !== "game") return;
     const game = this.gameNo;
     this.submittingGame = game;
+    // 랭킹에는 사람마다 최고 기록이 오른다: 이번 판보다 높은 판(로그인 전 손님으로 낸 판이나 등록에 실패한 판)이 있으면 그 판을 올린다
     const right = this.results.filter((r) => r.correct).length;
-    const rank = await submitScore(m.level, user.name, myCountry(), this.score, right, this.results.length, lang());
+    const best = store.bestGame(m.level);
+    const pick = best && best.score > this.score ? best : { score: this.score, correct: right };
+    const rank = await submitScore(m.level, user.name, myCountry(), pick.score, pick.correct, this.results.length, lang());
     if (this.submittingGame === game) this.submittingGame = null;
+    // 등록하는 동안 미뤄 둔 새 버전: 이제 첫 화면에 가만히 있으면 새로 불러온다
+    if (updatePending() && this.idle) return location.reload();
     if (game !== this.gameNo) return;
     track("rank_submit", { level: m.level, score: this.score, ok: rank !== null });
     this.submitted = rank ?? 0;
@@ -637,7 +644,7 @@ export class App {
   private showResult() {
     const m = this.mode;
     const right = this.results.filter((r) => r.correct).length;
-    this.isBest = m.kind === "game" ? store.finish(m.level, this.score) : false;
+    this.isBest = m.kind === "game" ? store.finish(m.level, this.score, right) : false;
     this.submitted = null;
     track("game_end", { level: m.level, mode: m.kind, score: this.score, correct: right, total: this.results.length, best: this.isBest, saved: store.saving });
     this.music.cue("finish");

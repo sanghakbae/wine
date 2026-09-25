@@ -63,7 +63,24 @@ function shuffle<T>(a: T[]): T[] {
 }
 
 const firstGrape = (g: string) => g.split(/[·,]/)[0].trim();
+/** 품종 구성 (순서만 다른 "카베르네 소비뇽 · 메를로" 와 "메를로 · 카베르네 소비뇽" 은 같다) */
+const grapeSet = (g: string) =>
+  g
+    .split(/[·,]/)
+    .map((x) => x.trim())
+    .sort()
+    .join("|");
 const TYPES: WineType[] = ["red", "white", "rose", "sparkling", "sweet", "fortified"];
+
+/**
+ * 종류 문제에서 오답으로 내면 안 되는 종류: 스파클링·스위트·주정강화는 색(레드·화이트·로제)과 겹치고
+ * (스파클링 로제에 "로제", 소테른에 "화이트"), 주정강화는 대개 달다 (포트에 "스위트")
+ */
+function alsoTrue(w: Wine): WineType[] {
+  if (w.type !== "sparkling" && w.type !== "sweet" && w.type !== "fortified") return [];
+  const color: WineType = ["red", "redLight", "port"].includes(w.liquid) ? "red" : ["rose", "rosePale"].includes(w.liquid) ? "rose" : "white";
+  return w.type === "fortified" ? [color, "sweet"] : [color];
+}
 
 /** 문제로 낼 수 있는 유형들 (와인마다 다르다) */
 function qtypesFor(w: Wine, level: Level): QType[] {
@@ -117,13 +134,16 @@ function distractors(w: Wine, q: QType, level: Level, n: number): Option[] {
   const out: Option[] = [];
   const push = (label: string, sub?: string) => {
     if (!label || seen.has(label) || out.length >= n) return;
-    if (q === "grape" && firstGrape(label) === firstGrape(correct)) return;
+    if (q === "grape" && (firstGrape(label) === firstGrape(correct) || grapeSet(label) === grapeSet(correct))) return;
+    // "보르도" 와 "보르도 · 소테른" 처럼 한쪽이 다른 쪽의 세부 산지면 둘 다 맞는 답이 된다
+    if (q === "region" && (correct.startsWith(`${label} · `) || label.startsWith(`${correct} · `))) return;
     seen.add(label);
     out.push({ label, sub });
   };
 
   if (q === "type") {
-    for (const ty of shuffle(TYPES)) push(typeName(ty));
+    const skip = alsoTrue(w);
+    for (const ty of shuffle(TYPES)) if (!skip.includes(ty)) push(typeName(ty));
     return out;
   }
   if (q === "shape") {
@@ -207,7 +227,8 @@ export function buildQuestion(w: Wine, qtype: QType, level: Level, trivia?: Triv
   const hide: Hide = asksName ? { name: true, info: level === "hard" && w.id in SIGNATURE } : { name: false, info: true };
 
   const hints: HintKey[] = [];
-  if (asksName) hints.push("initial");
+  // 첫 글자 힌트는 와인 이름의 첫 글자라 이름 문제에만 (생산자 문제에서는 엉뚱한 글자이고 이름까지 드러낸다)
+  if (qtype === "name") hints.push("initial");
   if (qtype !== "country" && qtype !== "region") hints.push("country");
   if (qtype !== "region") hints.push("region");
   if (qtype !== "grape") hints.push("grape");

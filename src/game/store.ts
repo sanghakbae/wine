@@ -7,13 +7,21 @@ import { loadProgress, saveProgress } from "../cloud";
 //  - Google 로그인: Firestore users/{uid} 에 저장하고, 빨리 뜨도록 기기에도 사용자별로 캐시한다.
 // 난이도 선택은 기록이 아니라 화면 설정이라 기기에 남긴다.
 
+/** 최고 점수를 낸 판 (랭킹 등록에는 그 판에서 맞힌 수도 있어야 한다) */
+export interface BestGame {
+  score: number;
+  correct: number;
+}
+
 interface State {
   best: Record<Level, number>;
+  /** 난이도별 최고 점수 판. 기기에만 둔다 (손님으로 낸 기록을 로그인한 뒤 랭킹에 올리려고) */
+  games: Partial<Record<Level, BestGame>>;
   found: Set<string>;
   plays: number;
 }
 
-const empty = (): State => ({ best: { easy: 0, normal: 0, hard: 0 }, found: new Set(), plays: 0 });
+const empty = (): State => ({ best: { easy: 0, normal: 0, hard: 0 }, games: {}, found: new Set(), plays: 0 });
 
 const LEVEL_KEY = "blind-bottle:level";
 const LEGACY_KEY = "blind-bottle:v1"; // 로그인 기능 전(1.2.0 까지) 기기에 남긴 기록
@@ -37,6 +45,7 @@ function write(key: string, v: unknown) {
 
 interface Plain {
   best?: Partial<Record<Level, number>>;
+  games?: Partial<Record<Level, BestGame>>;
   found?: string[];
   plays?: number;
   level?: Level;
@@ -46,14 +55,18 @@ function merge(...parts: (Plain | State | null)[]): State {
   const s = empty();
   for (const p of parts) {
     if (!p) continue;
-    for (const l of ["easy", "normal", "hard"] as Level[]) s.best[l] = Math.max(s.best[l], Number(p.best?.[l] ?? 0));
+    for (const l of ["easy", "normal", "hard"] as Level[]) {
+      s.best[l] = Math.max(s.best[l], Number(p.best?.[l] ?? 0));
+      const g = "games" in p ? p.games?.[l] : undefined;
+      if (g && Number.isInteger(g.score) && Number.isInteger(g.correct) && g.score > (s.games[l]?.score ?? -1)) s.games[l] = { score: g.score, correct: g.correct };
+    }
     for (const id of p.found ?? []) s.found.add(id);
     s.plays = Math.max(s.plays, Number(p.plays ?? 0));
   }
   return s;
 }
 
-const plain = (s: State) => ({ best: s.best, found: [...s.found], plays: s.plays });
+const plain = (s: State) => ({ best: s.best, games: s.games, found: [...s.found], plays: s.plays });
 
 let state = empty();
 let uid: string | null = null;
@@ -142,12 +155,17 @@ export const store = {
     persist();
     return true;
   },
-  finish(l: Level, score: number) {
+  finish(l: Level, score: number, correct: number) {
     state.plays++;
     const isBest = score > state.best[l];
     if (isBest) state.best[l] = score;
+    if (score > (state.games[l]?.score ?? -1)) state.games[l] = { score, correct };
     persist();
     return isBest;
+  },
+  /** 랭킹에 올릴 이 난이도의 최고 점수 판 (맞힌 수를 아는 판만) */
+  bestGame(l: Level): BestGame | null {
+    return state.games[l] ?? null;
   },
   onChange(f: () => void) {
     listeners.add(f);
