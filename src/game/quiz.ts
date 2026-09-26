@@ -8,12 +8,51 @@ import { countryName, familyName, hasProducer, grapeName, initialOf, producerOf,
 export type QType = "name" | "country" | "region" | "grape" | "type" | "producer" | "shape" | "trivia";
 export type Level = "easy" | "normal" | "hard";
 
-/** weight: 등급(1 대중적·2 유명·3 애호가용)별 출제 비중 */
-export const LEVELS: Record<Level, { options: number; tiers: number[]; weight: Record<number, number>; hintCost: number }> = {
-  easy: { options: 4, tiers: [1, 2], weight: { 1: 1, 2: 0.2, 3: 0 }, hintCost: 20 },
-  normal: { options: 4, tiers: [1, 2, 3], weight: { 1: 0.5, 2: 1, 3: 0.5 }, hintCost: 30 },
-  hard: { options: 6, tiers: [1, 2, 3], weight: { 1: 0.3, 2: 1, 3: 1 }, hintCost: 40 },
+/** 단계별 보기 수·보기로 쓰는 와인 등급(1 대중적·2 유명·3 애호가용)·힌트 값. 레벨별 출제 비중은 아래 CURVE */
+export const LEVELS: Record<Level, { options: number; tiers: number[]; hintCost: number }> = {
+  easy: { options: 4, tiers: [1, 2], hintCost: 20 },
+  normal: { options: 4, tiers: [1, 2, 3], hintCost: 30 },
+  hard: { options: 6, tiers: [1, 2, 3], hintCost: 40 },
 };
+
+/** 단계(입문·애호가·소믈리에)마다 레벨 10개, 레벨마다 25문제 */
+export const STAGES = 10;
+export const STAGE_ROUNDS = 25;
+/** 25문제 중 이만큼 맞히면 클리어 (다음 레벨이 열린다) · ★★ · ★★★ */
+export const CLEAR_AT = 18;
+export const STAR2_AT = 22;
+export const STAR3_AT = 25;
+export const starsFor = (correct: number) => (correct >= STAR3_AT ? 3 : correct >= STAR2_AT ? 2 : correct >= CLEAR_AT ? 1 : 0);
+/** 한 문제 최고 점수 (기본 100 + 연속 정답 보너스 최대 50) — 레벨 최고 점수는 이것 × 25 */
+export const MAX_POINTS = 150;
+
+type Tiers = Record<number, number>;
+/** 레벨 1 → 10 으로 가며 등급별 출제 비중·보기의 헷갈림이 바뀐다 (입문 Lv.1 이 가장 쉽고 소믈리에 Lv.10 이 가장 어렵다) */
+const CURVE: Record<Level, { from: Tiers; to: Tiers; similar: [number, number] }> = {
+  easy: { from: { 1: 1, 2: 0.05, 3: 0 }, to: { 1: 1, 2: 0.7, 3: 0 }, similar: [0, 0.35] },
+  normal: { from: { 1: 0.7, 2: 1, 3: 0.15 }, to: { 1: 0.25, 2: 1, 3: 0.8 }, similar: [0.35, 0.7] },
+  hard: { from: { 1: 0.15, 2: 0.9, 3: 1 }, to: { 1: 0.05, 2: 0.45, 3: 1 }, similar: [0.7, 1] },
+};
+const BASE: Record<Level, number> = { easy: 0, normal: 10, hard: 20 };
+
+interface Spec {
+  weight: Tiers;
+  /** 0 = 보기를 아무 와인에서, 1 = 가장 비슷한 와인에서 */
+  similar: number;
+  /** 0 = 이름·나라·종류 위주, 1 = 산지·품종·생산자·상식 위주 (30레벨 전체에 걸쳐 오른다) */
+  adv: number;
+}
+
+function spec(level: Level, stage: number): Spec {
+  const c = CURVE[level];
+  const k = (Math.min(STAGES, Math.max(1, stage)) - 1) / (STAGES - 1);
+  const lerp = (a: number, b: number) => a + (b - a) * k;
+  return {
+    weight: { 1: lerp(c.from[1], c.to[1]), 2: lerp(c.from[2], c.to[2]), 3: lerp(c.from[3], c.to[3]) },
+    similar: lerp(c.similar[0], c.similar[1]),
+    adv: (BASE[level] + stage - 1) / (3 * STAGES - 1),
+  };
+}
 
 export const levelName = (l: Level) => t(`lvl_${l}` as UIKey);
 export const levelAbout = (l: Level) => t(`lvl_${l}_about` as UIKey);
@@ -82,14 +121,31 @@ function alsoTrue(w: Wine): WineType[] {
   return w.type === "fortified" ? [color, "sweet"] : [color];
 }
 
-/** 문제로 낼 수 있는 유형들 (와인마다 다르다) */
-function qtypesFor(w: Wine, level: Level): QType[] {
-  const out: QType[] = ["name", "name", "country", "region", "region", "grape"];
-  if (level !== "hard") out.push("type");
-  if (w.producerQ && hasProducer(w)) out.push("producer", "producer");
-  if (SHAPES[w.shape].family) out.push("shape");
-  if (quizOf(w).length) out.push("trivia", "trivia", "trivia");
+/** 문제로 낼 수 있는 유형과 비중 (와인마다 다르고, 레벨이 오를수록 산지·품종·생산자·상식 문제가 늘어난다) */
+function qtypesFor(w: Wine, level: Level, adv: number): [QType, number][] {
+  const easy = 1 - adv * 0.7;
+  const out: [QType, number][] = [
+    ["name", 2],
+    ["country", 1.5 * easy + 0.2],
+    ["region", 0.6 + adv * 1.4],
+    ["grape", 0.3 + adv * 1.2],
+  ];
+  if (level !== "hard") out.push(["type", easy]);
+  if (w.producerQ && hasProducer(w)) out.push(["producer", 0.2 + adv * 1.8]);
+  if (SHAPES[w.shape].family) out.push(["shape", 0.5 + adv * 0.5]);
+  if (quizOf(w).length) out.push(["trivia", 0.5 + adv * 3]);
   return out;
+}
+
+function pickWeighted<T>(items: [T, number][]): T {
+  let total = 0;
+  for (const [, w] of items) total += w;
+  let r = Math.random() * total;
+  for (const [x, w] of items) {
+    r -= w;
+    if (r <= 0) return x;
+  }
+  return items[items.length - 1][0];
 }
 
 function valueOf(w: Wine, q: QType): string {
@@ -126,7 +182,7 @@ function similarity(a: Wine, b: Wine): number {
   return s + Math.random() * 2.5;
 }
 
-function distractors(w: Wine, q: QType, level: Level, n: number): Option[] {
+function distractors(w: Wine, q: QType, level: Level, n: number, similar: number): Option[] {
   const correct = valueOf(w, q);
   // 생산자 보기는 생산자 이름이 있는 와인에서만 (없으면 producerOf 가 와인 이름을 돌려줘 티가 난다)
   const pool = WINES.filter((x) => x.id !== w.id && (q !== "producer" || hasProducer(x)));
@@ -151,29 +207,29 @@ function distractors(w: Wine, q: QType, level: Level, n: number): Option[] {
     return out;
   }
 
-  // 난이도가 높을수록 비슷한 와인에서 보기를 뽑는다
+  // 레벨이 높을수록 비슷한 와인에서 보기를 뽑는다 (가장 비슷한 와인 몇 개 중에서 고를지가 점점 좁아진다)
   const ranked =
-    level === "easy"
+    similar < 0.15
       ? shuffle(pool)
-      : pool
-          .map((x) => ({ x, s: similarity(w, x) * (level === "hard" ? 1.6 : 1) }))
-          .sort((a, b) => b.s - a.s)
-          .slice(0, level === "hard" ? 40 : 80)
-          .sort(() => Math.random() - 0.5)
-          .map((o) => o.x);
+      : shuffle(
+          pool
+            .map((x) => ({ x, s: similarity(w, x) * (1 + similar * 0.6) }))
+            .sort((a, b) => b.s - a.s)
+            .slice(0, Math.round(400 - 370 * similar))
+            .map((o) => o.x),
+        );
   const tierOk = (x: Wine) => LEVELS[level].tiers.includes(x.tier);
   for (const x of ranked) if (tierOk(x)) push(valueOf(x, q), q === "name" ? wineSub(x) : undefined);
   for (const x of shuffle(pool)) push(valueOf(x, q), q === "name" ? wineSub(x) : undefined);
   return out;
 }
 
-function pickWine(level: Level, used: Set<string>): Wine {
-  const L = LEVELS[level];
+function pickWine(weight: Tiers, used: Set<string>): Wine {
   // 등급별 비중에 맞춰 뽑는다 (등급마다 와인 수가 달라도 비중이 유지되게 등급 수로 나눈다)
   const count: Record<number, number> = { 1: 0, 2: 0, 3: 0 };
   for (const w of WINES) count[w.tier]++;
-  const pool = WINES.filter((w) => L.weight[w.tier] > 0 && !used.has(w.id));
-  const wOf = (w: Wine) => L.weight[w.tier] / Math.max(1, count[w.tier]);
+  const pool = WINES.filter((w) => weight[w.tier] > 0 && !used.has(w.id));
+  const wOf = (w: Wine) => weight[w.tier] / Math.max(1, count[w.tier]);
   let total = 0;
   for (const w of pool) total += wOf(w);
   let r = Math.random() * total;
@@ -184,16 +240,18 @@ function pickWine(level: Level, used: Set<string>): Wine {
   return pool[pool.length - 1] ?? WINES[Math.floor(Math.random() * WINES.length)];
 }
 
-export function makeQuestion(level: Level, used: Set<string>, recentTypes: QType[]): Question {
-  const w = pickWine(level, used);
+/** 단계·레벨의 난이도에 맞춰 문제 하나를 무작위로 낸다 (한 판 안에서 같은 와인은 다시 나오지 않는다) */
+export function makeQuestion(level: Level, stage: number, used: Set<string>, recentTypes: QType[]): Question {
+  const sp = spec(level, stage);
+  const w = pickWine(sp.weight, used);
   // 같은 유형이 연달아 나오지 않게
-  let types = qtypesFor(w, level);
+  let types = qtypesFor(w, level, sp.adv);
   const last = recentTypes[recentTypes.length - 1];
-  if (last && types.some((q) => q !== last)) types = types.filter((q) => q !== last);
-  const qtype = types[Math.floor(Math.random() * types.length)];
+  if (last && types.some(([q]) => q !== last)) types = types.filter(([q]) => q !== last);
+  const qtype = pickWeighted(types);
   const qs = quizOf(w);
   const trivia = qtype === "trivia" ? qs[Math.floor(Math.random() * qs.length)] : undefined;
-  return buildQuestion(w, qtype, level, trivia);
+  return buildQuestion(w, qtype, level, trivia, sp.similar);
 }
 
 /** 한 와인에 대해 낼 수 있는 문제를 전부 (와인별 퀴즈) */
@@ -207,7 +265,8 @@ export function wineQuiz(w: Wine, level: Level): Question[] {
   return [qs[0], ...shuffle(qs.slice(1))];
 }
 
-export function buildQuestion(w: Wine, qtype: QType, level: Level, trivia?: Trivia): Question {
+/** similar: 오답 보기를 얼마나 비슷한 와인에서 뽑을지 (기본값은 단계 중간 레벨 수준) */
+export function buildQuestion(w: Wine, qtype: QType, level: Level, trivia?: Trivia, similar = spec(level, 5).similar): Question {
   const L = LEVELS[level];
   let options: Option[];
   let correct: Option;
@@ -216,7 +275,7 @@ export function buildQuestion(w: Wine, qtype: QType, level: Level, trivia?: Triv
     options = shuffle([correct, ...trivia.x.map((label) => ({ label }))]);
   } else {
     correct = { label: valueOf(w, qtype), sub: qtype === "name" ? wineSub(w) : undefined };
-    options = shuffle([correct, ...distractors(w, qtype, level, L.options - 1)]);
+    options = shuffle([correct, ...distractors(w, qtype, level, L.options - 1, similar)]);
   }
   const answer = options.indexOf(correct);
 

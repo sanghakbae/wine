@@ -1,27 +1,21 @@
-import type { Level } from "./quiz";
+import { CLEAR_AT, MAX_POINTS, STAGES, STAGE_ROUNDS, starsFor, type Level } from "./quiz";
+import { LEVEL_IDS, clampInt, emptyStages, mergeStages, type StageProg, type Stages, type Summary } from "./stages";
 import { onUser } from "../auth";
 import { loadProgress, saveProgress } from "../cloud";
 
-// 게임 기록: 최고 점수, 셀러(맞힌 와인), 판 수.
+// 게임 기록: 최고 점수, 레벨 진행(레벨마다 가장 많이 맞힌 수·최고 점수), 셀러(맞힌 와인), 판 수.
 //  - 로그인 안 함(손님): 메모리에만 있고 창을 닫으면 사라진다.
 //  - Google 로그인: Firestore users/{uid} 에 저장하고, 빨리 뜨도록 기기에도 사용자별로 캐시한다.
 // 난이도 선택은 기록이 아니라 화면 설정이라 기기에 남긴다.
 
-/** 최고 점수를 낸 판 (랭킹 등록에는 그 판에서 맞힌 수도 있어야 한다) */
-export interface BestGame {
-  score: number;
-  correct: number;
-}
-
 interface State {
   best: Record<Level, number>;
-  /** 난이도별 최고 점수 판. 기기에만 둔다 (손님으로 낸 기록을 로그인한 뒤 랭킹에 올리려고) */
-  games: Partial<Record<Level, BestGame>>;
+  stages: Stages;
   found: Set<string>;
   plays: number;
 }
 
-const empty = (): State => ({ best: { easy: 0, normal: 0, hard: 0 }, games: {}, found: new Set(), plays: 0 });
+const empty = (): State => ({ best: { easy: 0, normal: 0, hard: 0 }, stages: emptyStages(), found: new Set(), plays: 0 });
 
 const LEVEL_KEY = "blind-bottle:level";
 const LEGACY_KEY = "blind-bottle:v1"; // 로그인 기능 전(1.2.0 까지) 기기에 남긴 기록
@@ -45,7 +39,7 @@ function write(key: string, v: unknown) {
 
 interface Plain {
   best?: Partial<Record<Level, number>>;
-  games?: Partial<Record<Level, BestGame>>;
+  stages?: Partial<Record<Level, Partial<StageProg>>>;
   found?: string[];
   plays?: number;
   level?: Level;
@@ -55,18 +49,15 @@ function merge(...parts: (Plain | State | null)[]): State {
   const s = empty();
   for (const p of parts) {
     if (!p) continue;
-    for (const l of ["easy", "normal", "hard"] as Level[]) {
-      s.best[l] = Math.max(s.best[l], Number(p.best?.[l] ?? 0));
-      const g = "games" in p ? p.games?.[l] : undefined;
-      if (g && Number.isInteger(g.score) && Number.isInteger(g.correct) && g.score > (s.games[l]?.score ?? -1)) s.games[l] = { score: g.score, correct: g.correct };
-    }
+    for (const l of LEVEL_IDS) s.best[l] = Math.max(s.best[l], clampInt(p.best?.[l], STAGE_ROUNDS * MAX_POINTS));
+    mergeStages(p.stages, s.stages);
     for (const id of p.found ?? []) s.found.add(id);
     s.plays = Math.max(s.plays, Number(p.plays ?? 0));
   }
   return s;
 }
 
-const plain = (s: State) => ({ best: s.best, games: s.games, found: [...s.found], plays: s.plays });
+const plain = (s: State) => ({ best: s.best, stages: s.stages, found: [...s.found], plays: s.plays });
 
 let state = empty();
 let uid: string | null = null;
@@ -89,10 +80,11 @@ async function flushNow() {
   if (!me) return false;
   const merged = await saveProgress(plain(state));
   if (!merged || uid !== me) return false;
-  const before = state.found.size + state.plays;
+  const before = JSON.stringify(plain(state));
   state = merge(state, merged);
   write(cacheKey(me), plain(state));
-  if (state.found.size + state.plays !== before) listeners.forEach((f) => f());
+  // 다른 기기에서 쌓은 기록이 합쳐졌으면 화면도 다시 그린다
+  if (JSON.stringify(plain(state)) !== before) listeners.forEach((f) => f());
   return true;
 }
 
@@ -157,17 +149,46 @@ export const store = {
     persist();
     return true;
   },
-  finish(l: Level, score: number, correct: number) {
+  /** 레벨 한 판을 끝낸다. 반환: 클리어했는지, 별, 이 레벨 최고 점수를 새로 냈는지, 이번에 처음 클리어했는지 */
+  finishStage(l: Level, stage: number, correct: number, score: number) {
+    const i = stage - 1;
+    const p = state.stages[l];
+    const wasCleared = p.c[i] >= CLEAR_AT;
+    const cleared = correct >= CLEAR_AT;
+    const isBest = score > p.s[i];
     state.plays++;
-    const isBest = score > state.best[l];
-    if (isBest) state.best[l] = score;
-    if (score > (state.games[l]?.score ?? -1)) state.games[l] = { score, correct };
+    p.c[i] = Math.max(p.c[i], correct);
+    p.s[i] = Math.max(p.s[i], score);
+    state.best[l] = Math.max(state.best[l], score);
     persist();
-    return isBest;
+    return { cleared, stars: starsFor(correct), isBest, firstClear: cleared && !wasCleared };
   },
-  /** 랭킹에 올릴 이 난이도의 최고 점수 판 (맞힌 수를 아는 판만) */
-  bestGame(l: Level): BestGame | null {
-    return state.games[l] ?? null;
+  /** Lv.stage 의 기록 (가장 많이 맞힌 수·최고 점수·별) */
+  stage(l: Level, stage: number) {
+    const c = state.stages[l].c[stage - 1] ?? 0;
+    return { correct: c, score: state.stages[l].s[stage - 1] ?? 0, stars: starsFor(c), cleared: c >= CLEAR_AT };
+  },
+  /** Lv.1 은 늘 열려 있고, 그다음은 앞 레벨을 클리어하면 열린다 */
+  unlocked(l: Level, stage: number) {
+    return stage <= 1 || state.stages[l].c[stage - 2] >= CLEAR_AT;
+  },
+  /** 이어서 할 레벨: 아직 클리어하지 못한 첫 레벨 (모두 클리어했으면 마지막 레벨) */
+  nextStage(l: Level) {
+    const i = state.stages[l].c.findIndex((c) => c < CLEAR_AT);
+    return i < 0 ? STAGES : i + 1;
+  },
+  summary(l: Level): Summary {
+    const p = state.stages[l];
+    let cleared = 0;
+    let stars = 0;
+    let pts = 0;
+    for (let i = 0; i < STAGES; i++) {
+      if (p.c[i] < CLEAR_AT) continue;
+      cleared++;
+      stars += starsFor(p.c[i]);
+      pts += p.s[i];
+    }
+    return { cleared, stars, pts };
   },
   onChange(f: () => void) {
     listeners.add(f);

@@ -1,8 +1,9 @@
 rules_version = '2';
 
 // 블라인드 보틀 Firestore 규칙 — 쓰기는 모두 Google 로그인한 사람만, 자기 문서만.
-//  - users/{uid}: 게임 기록 (최고 점수·맞힌 와인·판 수)
-//  - leaderboard/{level}/entries/{uid}: 난이도별 최고 기록. 점수가 같거나 오를 때만 고칠 수 있다.
+//  - users/{uid}: 게임 기록 (최고 점수·레벨 진행·맞힌 와인·판 수)
+//  - ranking/{level}/entries/{uid}: 단계별 레벨 진행 랭킹 (클리어한 레벨 수·별·점수 합). 점수 합이 같거나 오를 때만 고칠 수 있다.
+//  - leaderboard/{level}/entries/{uid}: 예전(1.11 전) 10문제 판 랭킹. 더 쓰지 않지만 옛 앱이 쓰고, 탈퇴 때 지운다.
 //  - wineStats/{wine}: 와인별 푼 횟수 n, 맞힌 횟수 c. 한 번에 n 은 1, c 는 0 또는 1 만 늘릴 수 있다.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -14,17 +15,31 @@ service cloud.firestore {
       return google() && request.auth.uid == uid;
     }
 
+    // 레벨 진행 한 단계: c = 레벨마다 가장 많이 맞힌 수, s = 레벨마다 최고 점수 (레벨 10개)
+    function validStage(x) {
+      return x is map && x.keys().hasOnly(['c', 's'])
+        && x.c is list && x.c.size() <= 10
+        && x.s is list && x.s.size() <= 10;
+    }
+    function validStages(x) {
+      return x is map && x.keys().hasOnly(['easy', 'normal', 'hard'])
+        && (!('easy' in x) || validStage(x.easy))
+        && (!('normal' in x) || validStage(x.normal))
+        && (!('hard' in x) || validStage(x.hard));
+    }
+
     match /users/{uid} {
       allow read, delete: if me(uid);
       allow create, update: if me(uid)
-        && request.resource.data.keys().hasOnly(['name', 'best', 'found', 'plays', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['name', 'best', 'stages', 'found', 'plays', 'updatedAt'])
         && request.resource.data.name is string && request.resource.data.name.size() <= 40
         && request.resource.data.best is map
         && request.resource.data.best.keys().hasAll(['easy', 'normal', 'hard'])
         && request.resource.data.best.keys().hasOnly(['easy', 'normal', 'hard'])
-        && request.resource.data.best.easy is int && request.resource.data.best.easy >= 0 && request.resource.data.best.easy <= 2000
-        && request.resource.data.best.normal is int && request.resource.data.best.normal >= 0 && request.resource.data.best.normal <= 2000
-        && request.resource.data.best.hard is int && request.resource.data.best.hard >= 0 && request.resource.data.best.hard <= 2000
+        && request.resource.data.best.easy is int && request.resource.data.best.easy >= 0 && request.resource.data.best.easy <= 3750
+        && request.resource.data.best.normal is int && request.resource.data.best.normal >= 0 && request.resource.data.best.normal <= 3750
+        && request.resource.data.best.hard is int && request.resource.data.best.hard >= 0 && request.resource.data.best.hard <= 3750
+        && (!('stages' in request.resource.data) || validStages(request.resource.data.stages))
         && request.resource.data.found is list && request.resource.data.found.size() <= 5000
         && request.resource.data.plays is int && request.resource.data.plays >= 0
         && request.resource.data.updatedAt == request.time;
@@ -40,6 +55,26 @@ service cloud.firestore {
         && d.lang is string && d.lang.size() <= 5
         && d.at == request.time
         && d.v is string && d.v.size() <= 12;
+    }
+
+    // 레벨 랭킹: 레벨 10개, 레벨마다 25문제 × 한 문제 최고 150점 = 3,750점, 클리어한 레벨마다 별 1~3개
+    function validRank(d) {
+      return d.keys().hasOnly(['nick', 'cc', 'pts', 'stars', 'cleared', 'lang', 'at', 'v'])
+        && d.nick is string && d.nick.size() >= 1 && d.nick.size() <= 12
+        && (!('cc' in d) || (d.cc is string && (d.cc == '' || d.cc.matches('^[A-Z]{2}$'))))
+        && d.cleared is int && d.cleared >= 1 && d.cleared <= 10
+        && d.stars is int && d.stars >= d.cleared && d.stars <= d.cleared * 3
+        && d.pts is int && d.pts >= 0 && d.pts <= d.cleared * 3750
+        && d.lang is string && d.lang.size() <= 5
+        && d.at == request.time
+        && d.v is string && d.v.size() <= 12;
+    }
+
+    match /ranking/{level}/entries/{uid} {
+      allow read: if level in ['easy', 'normal', 'hard'];
+      allow create: if me(uid) && level in ['easy', 'normal', 'hard'] && validRank(request.resource.data);
+      allow update: if me(uid) && validRank(request.resource.data) && request.resource.data.pts >= resource.data.pts;
+      allow delete: if me(uid);
     }
 
     match /leaderboard/{level}/entries/{uid} {

@@ -366,3 +366,24 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 .panel.landing .links .link { font-size: 12px; padding: 3px 3px; flex: none; }
 .link.privacy { font-weight: 700; color: var(--text); }
 @media (max-width: 380px) { .panel.landing .links .link { font-size: 11px; padding: 3px 2px; } }
+
+/* ───────── 레벨 선택 (단계마다 Lv.1~10) */
+.st-prog { margin: 0; font-size: 14px; font-weight: 700; color: var(--gold); }
+.st-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(62px, 1fr)); gap: 6px; }
+.st-tile { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 6px; font-variant-numeric: tabular-nums; }
+.st-tile b { font-size: 14px; }
+.st-tile small { font-size: 10.5px; color: var(--muted); }
+.st-tile.done { border-color: rgba(217,181,106,0.55); background: rgba(217,181,106,0.1); }
+.st-tile.next { border-color: #c24a5c; box-shadow: 0 0 0 1px #c24a5c inset, 0 0 12px rgba(194,74,92,0.35); }
+.st-tile:disabled { opacity: 0.4; }
+.st-stars { font-style: normal; color: var(--gold); letter-spacing: 0.05em; font-size: 12px; line-height: 1; }
+.st-verdict { font-size: 15px; font-weight: 700; }
+.st-verdict.ok { color: var(--gold); }
+.st-verdict.bad { color: var(--muted); }
+@media (min-width: 1200px) {
+  .st-tile { padding: 10px 6px; }
+  .st-tile b { font-size: 17px; }
+  .st-stars { font-size: 15px; }
+  .st-tile small { font-size: 12px; }
+  .st-prog { font-size: 16px; }
+}

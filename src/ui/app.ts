@@ -2,7 +2,12 @@ import { SHAPES } from "../bottle/shapes";
 import { pickVintage } from "../data/vintage";
 import { WINES, type Wine } from "../data/wines";
 import {
+  CLEAR_AT,
   LEVELS,
+  STAGES,
+  STAGE_ROUNDS,
+  STAR2_AT,
+  STAR3_AT,
   hintLabel,
   hintText,
   levelAbout,
@@ -40,7 +45,7 @@ import { countryLabel, flagOf, myCountry, short3 } from "../country";
 import { updatePending } from "./update";
 import { LoginError, authReady, currentUser, deleteAccount, onUser, reauthenticate, signIn, signOut } from "../auth";
 import { track } from "../analytics";
-import { cloudEnabled, deleteMyData, recordAnswer, submitScore, topScores, wineRate, type Entry } from "../cloud";
+import { cloudEnabled, deleteMyData, recordAnswer, submitRank, topRanks, wineRate, type RankEntry } from "../cloud";
 
 /** Google 로그인 버튼 — 구글 브랜드 가이드의 공식 G 로고, 다크 테마 */
 const GOOGLE_BTN = (label: string) =>
@@ -48,8 +53,6 @@ const GOOGLE_BTN = (label: string) =>
 
 /** style.css 의 오른쪽 기둥 레이아웃 조건과 같아야 한다 */
 const SIDE_QUERY = "(min-width: 900px), (orientation: landscape) and (max-height: 520px)";
-
-const ROUNDS = 10;
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
@@ -59,14 +62,18 @@ interface RoundResult {
   points: number;
 }
 
-type Mode = { kind: "game"; level: Level } | { kind: "wine"; level: Level; wine: Wine; queue: Question[] };
+/** game: 단계(입문·애호가·소믈리에)의 Lv.stage 한 판, wine: 셀러에서 고른 와인 하나의 퀴즈 */
+type Mode = { kind: "game"; level: Level; stage: number } | { kind: "wine"; level: Level; wine: Wine; queue: Question[] };
+
+/** ★★☆ */
+const starText = (n: number) => "★".repeat(n) + "☆".repeat(3 - n);
 
 export class App {
   private hud: HTMLElement;
   private hero: HTMLElement;
   private liveRank: HTMLElement;
   /** 게임 중 왼쪽 위 랭킹: 서버에서 받은 상위 기록 (null = 못 불러옴, undefined = 불러오는 중) */
-  private liveTop: Entry[] | null | undefined = undefined;
+  private liveTop: RankEntry[] | null | undefined = undefined;
   private liveLevel: Level | null = null;
   private liveAt = 0;
   private cellarIO: IntersectionObserver | null = null;
@@ -80,9 +87,9 @@ export class App {
   private sound: HTMLButtonElement;
   /** 첫 화면 왼쪽 위: 홍보 배너 복사 */
   private promo: HTMLButtonElement;
-  private mode: Mode = { kind: "game", level: store.level };
+  private mode: Mode = { kind: "game", level: store.level, stage: 1 };
   private round = 0;
-  private total = ROUNDS;
+  private total = STAGE_ROUNDS;
   private score = 0;
   private streak = 0;
   private results: RoundResult[] = [];
@@ -236,7 +243,7 @@ export class App {
       this.liveLevel = level;
       this.liveTop = undefined;
       this.renderLiveRank();
-      const list = await topScores(level, 10);
+      const list = await topRanks(level, 10);
       if (this.liveLevel !== level) return;
       this.liveTop = list;
       this.liveAt = Date.now();
@@ -261,13 +268,13 @@ export class App {
       this.liveRank.innerHTML = `${head}<p class="lr-note">${this.liveTop === undefined ? "…" : t("rank_fail")}</p>`;
     } else {
       // 서버 상위 기록 사이에 내 기록을 끼워 넣고 10위까지만 보여 준다.
-      // 랭킹은 사람마다 최고 기록이라 내 줄도 최고 기록(서버·기기 중 큰 값)을 보여 주고, 이번 판이 넘어서면 실시간으로 오른다
+      // 랭킹 점수는 클리어한 레벨 최고 점수의 합이라, 이번 판이 클리어 기준을 넘고 이 레벨 기록보다 높아지면 실시간으로 오른다
       const me = currentUser();
       const others = this.liveTop.filter((x) => !(me && x.uid === me.uid));
-      const mine = this.liveTop.find((x) => me && x.uid === me.uid)?.score ?? 0;
-      const myScore = Math.max(mine, store.best(m.level), this.score);
-      const myRank = others.filter((x) => x.score > myScore).length + 1;
-      const rows = others.map((x) => ({ nick: x.nick, cc: x.cc, score: x.score, mine: false }));
+      const mine = this.liveTop.find((x) => me && x.uid === me.uid)?.pts ?? 0;
+      const myScore = Math.max(mine, this.livePts(m.level, m.stage));
+      const myRank = others.filter((x) => x.pts > myScore).length + 1;
+      const rows = others.map((x) => ({ nick: x.nick, cc: x.cc, score: x.pts, mine: false }));
       rows.splice(myRank - 1, 0, { nick: t("rank_me"), cc: myCountry(), score: myScore, mine: true });
       const top10 = rows.slice(0, 10);
       this.liveRank.innerHTML = `${head}
@@ -280,6 +287,14 @@ export class App {
         ${myRank > 10 ? `<p class="lr-me"><span>${t("rank_me")}</span><em>${myScore.toLocaleString(lang())}</em></p>` : ""}`;
     }
     this.placeLiveRank();
+  }
+
+  /** 지금 판까지 넣은 내 랭킹 점수: 다른 레벨 기록 + 이 레벨은 (기존 기록, 이번 판이 클리어 기준을 넘었으면 이번 점수) 중 큰 값 */
+  private livePts(level: Level, stage: number) {
+    const sum = store.summary(level);
+    const cur = store.stage(level, stage);
+    const now = this.results.filter((r) => r.correct).length >= CLEAR_AT ? this.score : 0;
+    return sum.pts - (cur.cleared ? cur.score : 0) + Math.max(cur.cleared ? cur.score : 0, now);
   }
 
   /** HUD 바로 아래에 붙인다 (화면을 돌리거나 크기를 바꿔 HUD 높이가 바뀌어도 따라간다) */
@@ -387,7 +402,9 @@ export class App {
   /** 셀러·랭킹 창 닫기: 랜딩 위에서 열었으면 병을 바꾸지 않고 타이머만 다시 돌린다 */
   private closeOverlay() {
     this.cellar.hidden = true;
-    if (this.view === "landing" && !this.maybeReload()) this.startLandingTimer();
+    if (this.view !== "landing" || this.maybeReload()) return;
+    this.renderLanding(); // 레벨 창에서 단계를 바꿨을 수 있다
+    this.startLandingTimer();
   }
 
   private renderLanding() {
@@ -408,7 +425,7 @@ export class App {
           .map(
             (l) => `<button class="level ${l === level ? "on" : ""}" data-level="${l}" role="radio" aria-checked="${l === level}">
               <b>${levelName(l)}</b><span>${levelAbout(l)}</span>
-              <em>🏆 ${store.best(l).toLocaleString(lang())}</em>
+              <em>Lv ${store.summary(l).cleared}/${STAGES} · ★ ${store.summary(l).stars}</em>
             </button>`,
           )
           .join("")}
@@ -441,7 +458,7 @@ export class App {
       }
       switch (el.dataset.act) {
         case "start":
-          return this.startGame({ kind: "game", level: store.level });
+          return this.openStages(store.level);
         case "cellar":
           return this.openCellar();
         case "rank":
@@ -475,7 +492,7 @@ export class App {
     clearInterval(this.titleTimer);
     this.mode = mode;
     this.round = 0;
-    this.total = mode.kind === "wine" ? mode.queue.length : ROUNDS;
+    this.total = mode.kind === "wine" ? mode.queue.length : STAGE_ROUNDS;
     this.score = 0;
     this.streak = 0;
     this.results = [];
@@ -488,7 +505,7 @@ export class App {
     this.hud.hidden = false;
     this.cellar.hidden = true;
     this.gameNo++;
-    track("game_start", { level: mode.level, mode: mode.kind, lang: lang(), ...(mode.kind === "wine" ? { wine: mode.wine.id } : {}) });
+    track("game_start", { level: mode.level, mode: mode.kind, lang: lang(), ...(mode.kind === "wine" ? { wine: mode.wine.id } : { stage: mode.stage }) });
     this.next();
     if (cloudEnabled && authReady() && !store.saving) this.toast(t("guest_toast"));
     this.loadLiveRank();
@@ -498,7 +515,7 @@ export class App {
     if (this.round >= this.total) return this.showResult();
     this.round++;
     const m = this.mode;
-    const q = m.kind === "wine" ? m.queue[this.round - 1] : makeQuestion(m.level, this.used, this.recent);
+    const q = m.kind === "wine" ? m.queue[this.round - 1] : makeQuestion(m.level, m.stage, this.used, this.recent);
     this.q = q;
     this.used.add(q.wine.id);
     this.recent.push(q.qtype);
@@ -512,7 +529,7 @@ export class App {
   private renderHud() {
     const m = this.mode;
     // 와인별 퀴즈에서 와인 이름을 띄우면 이름 문제의 답이 된다
-    const title = m.kind === "wine" ? t("cel_title") : levelName(m.level);
+    const title = m.kind === "wine" ? t("cel_title") : `${levelName(m.level)} Lv.${m.stage}`;
     const pct = Math.round(((this.round - (this.answered ? 0 : 1)) / this.total) * 100);
     this.hud.innerHTML = `
       <button class="hud-quit" data-act="quit" aria-label="${t("quit")}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -631,6 +648,8 @@ export class App {
 
   // ───────────────────────── 결과
   private isBest = false;
+  /** 이번 레벨 판의 결과 (와인별 퀴즈면 null) */
+  private stageRes: { cleared: boolean; stars: number; firstClear: boolean } | null = null;
   /** 랭킹 등록 결과: null = 아직, 0 = 실패, n = 전체 순위 */
   private submitted: number | null = null;
   /** 랭킹 등록 중인 판 번호 (판마다 따로: 앞 판 등록이 늦어져도 다음 판 등록을 막지 않는다) */
@@ -642,11 +661,8 @@ export class App {
     if (!user || m.kind !== "game") return;
     const game = this.gameNo;
     this.submittingGame = game;
-    // 랭킹에는 사람마다 최고 기록이 오른다: 이번 판보다 높은 판(로그인 전 손님으로 낸 판이나 등록에 실패한 판)이 있으면 그 판을 올린다
-    const right = this.results.filter((r) => r.correct).length;
-    const best = store.bestGame(m.level);
-    const pick = best && best.score > this.score ? best : { score: this.score, correct: right };
-    const rank = await submitScore(m.level, user.name, myCountry(), pick.score, pick.correct, this.results.length, lang());
+    // 랭킹에는 이 단계의 레벨 진행 전체가 오른다 (로그인 전 손님으로 깬 레벨도 로그인하면서 합쳐져 함께 오른다)
+    const rank = await submitRank(m.level, user.name, myCountry(), store.summary(m.level), lang());
     if (this.submittingGame === game) this.submittingGame = null;
     // 등록하는 동안 미뤄 둔 새 버전: 이제 첫 화면에 가만히 있으면 새로 불러온다
     if (this.maybeReload()) return;
@@ -661,9 +677,16 @@ export class App {
   private showResult() {
     const m = this.mode;
     const right = this.results.filter((r) => r.correct).length;
-    this.isBest = m.kind === "game" ? store.finish(m.level, this.score, right) : false;
+    if (m.kind === "game") {
+      const r = store.finishStage(m.level, m.stage, right, this.score);
+      this.isBest = r.isBest;
+      this.stageRes = r;
+    } else {
+      this.isBest = false;
+      this.stageRes = null;
+    }
     this.submitted = null;
-    track("game_end", { level: m.level, mode: m.kind, score: this.score, correct: right, total: this.results.length, best: this.isBest, saved: store.saving });
+    track("game_end", { level: m.level, mode: m.kind, ...(m.kind === "game" ? { stage: m.stage, cleared: this.stageRes?.cleared } : {}), score: this.score, correct: right, total: this.results.length, best: this.isBest, saved: store.saving });
     this.music.cue("finish");
     this.view = "result";
     this.hud.hidden = true;
@@ -679,13 +702,33 @@ export class App {
     let rankBlock = "";
     if (cloudEnabled && m.kind === "game") {
       if (!user) rankBlock = `<div class="rank-login">${GOOGLE_BTN(t("login_to_rank"))}<p class="save-note">${t("login_save_note")}</p></div>`;
+      else if (store.summary(m.level).cleared === 0) rankBlock = `<p class="rank-msg">${t("rank_need")}</p>`;
       else if (this.submitted) rankBlock = `<p class="rank-msg">${t("rank_done", { n: this.submitted })} · <a href="#" data-act="rank">${t("rank_title")}</a></p>`;
       else if (this.submitted === 0) rankBlock = `<p class="rank-msg">${t("rank_fail")}</p>`;
       else rankBlock = `<p class="rank-msg">…</p>`;
     }
+    // 레벨 판: 클리어했는지·별·다음 레벨이 열렸는지
+    const sr = m.kind === "game" ? this.stageRes : null;
+    const hasNext = m.kind === "game" && sr?.cleared && m.stage < STAGES;
+    const stageLine =
+      m.kind === "game" && sr
+        ? sr.cleared
+          ? `<div class="st-verdict ok">${t("st_clear", { n: m.stage })} <i class="st-stars">${starText(sr.stars)}</i>${sr.firstClear && hasNext ? ` · ${t("st_unlocked", { n: m.stage + 1 })}` : ""}</div>`
+          : `<div class="st-verdict bad">Lv.${m.stage} · ${t("st_fail", { c: CLEAR_AT })}</div>`
+        : "";
+    const buttons =
+      m.kind === "game"
+        ? `${hasNext ? `<button class="primary" data-act="nextStage">${t("st_next")} · Lv.${m.stage + 1}</button>` : ""}
+           <button class="${hasNext ? "" : "primary"}" data-act="again">${t("st_retry")}</button>
+           <button data-act="stages">${t("st_list")}</button>
+           <button data-act="home">${t("home")}</button>`
+        : `<button class="primary" data-act="again">${t("againWine")}</button>
+           <button data-act="cellar">${t("toCellar")}</button>
+           <button data-act="home">${t("home")}</button>`;
     this.panel.className = "panel result";
     this.panel.innerHTML = `
       <div class="res-head">
+        ${stageLine}
         <div class="big">${this.score.toLocaleString(lang())}<small>${t("ptsUnit")}</small></div>
         <div>${t("resCorrect", { a: right, b: this.results.length })}${this.isBest ? ` · <span class="best">${t("resBest")}</span>` : ""}</div>
         <div class="grade">${grade(right / this.results.length)}</div>
@@ -698,11 +741,7 @@ export class App {
           )
           .join("")}
       </ol>
-      <div class="row">
-        <button class="primary" data-act="again">${m.kind === "wine" ? t("againWine") : t("again")}</button>
-        <button data-act="cellar">${t("toCellar")}</button>
-        <button data-act="home">${t("home")}</button>
-      </div>`;
+      <div class="row">${buttons}</div>`;
     this.panel.onclick = (e) => {
       const el = e.target as HTMLElement;
       const item = el.closest<HTMLElement>("[data-k]");
@@ -722,6 +761,8 @@ export class App {
         return;
       }
       if (act === "again") this.startGame(m.kind === "wine" ? { ...m, queue: wineQuiz(m.wine, m.level) } : m);
+      else if (act === "nextStage" && m.kind === "game") this.startGame({ ...m, stage: m.stage + 1 });
+      else if (act === "stages") this.openStages(m.level);
       else if (act === "cellar") this.openCellar();
       else if (act === "home") this.showTitle();
     };
@@ -760,7 +801,7 @@ export class App {
     };
     const req = ++this.rankReq;
     const ol = this.cellar.querySelector(".rank-list");
-    const list = await topScores(level, 20);
+    const list = await topRanks(level, 20);
     if (req !== this.rankReq || !ol || !ol.isConnected) return;
     if (!list) ol.innerHTML = `<li class="rank-note">${t("rank_fail")}</li>`;
     else if (!list.length) ol.innerHTML = `<li class="rank-note">${t("rank_empty")}</li>`;
@@ -768,9 +809,51 @@ export class App {
       ol.innerHTML = list
         .map(
           (x, i) =>
-            `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="cc" role="img" title="${esc(countryLabel(x.cc))}" aria-label="${esc(countryLabel(x.cc))}">${flagOf(x.cc)}</span><span class="nk">${esc(short3(x.nick))}</span><span class="cr">${x.correct}/${x.total}</span><em>${x.score.toLocaleString(lang())}</em></li>`,
+            `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="cc" role="img" title="${esc(countryLabel(x.cc))}" aria-label="${esc(countryLabel(x.cc))}">${flagOf(x.cc)}</span><span class="nk">${esc(short3(x.nick))}</span><span class="cr">Lv ${x.cleared} · ★${x.stars}</span><em>${x.pts.toLocaleString(lang())}</em></li>`,
         )
         .join("");
+  }
+
+  // ───────────────────────── 레벨 선택
+  /** 단계의 레벨 10개. 클리어한 레벨은 별, 아직 못 연 레벨은 자물쇠. 열린 레벨을 누르면 바로 시작한다 */
+  private openStages(level: Level) {
+    clearInterval(this.titleTimer);
+    store.level = level;
+    const sum = store.summary(level);
+    const next = store.nextStage(level);
+    track("stages_open", { level, cleared: sum.cleared });
+    this.cellar.hidden = false;
+    this.cellar.innerHTML = `
+      <div class="cel-head">
+        <h2>${t("st_map", { lv: levelName(level) })}</h2>
+        <button class="ghost" data-act="close" aria-label="${t("close")}">✕</button>
+      </div>
+      <div class="rank-tabs" role="tablist">${(Object.keys(LEVELS) as Level[])
+        .map((l) => `<button role="tab" aria-selected="${l === level}" class="${l === level ? "on" : ""}" data-level="${l}">${levelName(l)}</button>`)
+        .join("")}</div>
+      <p class="st-prog">${t("st_prog", { a: sum.cleared, b: STAGES, s: sum.stars, m: STAGES * 3 })}</p>
+      <p class="cel-tip">${t("st_rule", { n: STAGE_ROUNDS, c: CLEAR_AT, b: STAR2_AT, p: STAR3_AT })}</p>
+      <div class="st-grid">${Array.from({ length: STAGES }, (_, k) => {
+        const n = k + 1;
+        const r = store.stage(level, n);
+        const open = store.unlocked(level, n);
+        return `<button class="st-tile${r.cleared ? " done" : ""}${n === next ? " next" : ""}" data-stage="${n}"${open ? "" : ` disabled title="${esc(t("st_locked"))}"`}>
+          <b>Lv.${n}</b><i class="st-stars">${open ? starText(r.stars) : "🔒"}</i><small>${r.correct ? `${r.correct}/${STAGE_ROUNDS}` : "&nbsp;"}</small>
+        </button>`;
+      }).join("")}</div>
+      <button class="primary cta" data-stage="${next}">${sum.cleared === STAGES ? `${t("st_all")} · ` : ""}${t("st_go", { n: next })}</button>`;
+    this.cellar.onclick = (e) => {
+      const el = e.target as HTMLElement;
+      if (el.closest("[data-act=close]")) return this.closeOverlay();
+      const tab = el.closest<HTMLElement>("[data-level]");
+      if (tab) return this.openStages(tab.dataset.level as Level);
+      const st = el.closest<HTMLButtonElement>("[data-stage]");
+      if (st && !st.disabled) {
+        this.music.unlock();
+        this.startGame({ kind: "game", level, stage: Number(st.dataset.stage) });
+      }
+    };
+    this.cellar.querySelector<HTMLButtonElement>(".cta")?.focus();
   }
 
   // ───────────────────────── 와인 셀러 (도감)
