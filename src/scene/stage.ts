@@ -283,7 +283,8 @@ export class Stage {
     if (since < interval - 2) return;
     this.lastFrame = now;
     if (since < 250 && !active) this.adapt(since, interval);
-    this.frame(Math.min(since / 1000, 0.05));
+    // 느린 기기(15fps 안팎)에서도 병이 내려오고 도는 시간이 늘어지지 않게 한 프레임에 0.1초까지 진행 (탭을 오래 가렸다 돌아올 때 튀는 것만 막는다)
+    this.frame(Math.min(since / 1000, 0.1));
   }
 
   /** 목표 프레임을 계속 못 맞추면 해상도를 낮추고, 한동안 여유가 있으면 다시 올린다 */

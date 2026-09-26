@@ -158,8 +158,15 @@ export function familyAbout(f: FamilyId) {
 const textOf = (w: Wine): WineText | undefined => loaded[current]?.[w.id];
 
 /** 원어 이름. 부르고뉴처럼 같은 밭 이름을 여러 생산자가 쓰면 생산자를 앞에 붙여 구분한다 */
+/** 생산자 이름에서 흔한 앞말은 빼고 고유한 단어만 ("Wente Vineyards" → wente) */
+const MAKER_GENERIC = /^(domaine|chateau|château|bodegas?|maison|weingut|tenuta|cantina|casa|vineyards?|winery|wines?|estates?|cellars?|vins|champagne|quinta|viña|vina|azienda|agricola|marchesi|castello|family|the|de|di|du|la|le|y|&|and)$/i;
+/** 원어 이름 + 생산자 (이름에 생산자가 이미 들어 있으면 붙이지 않는다: "Wente Vineyards Wente Morning Fog" 방지) */
 export function originalFull(w: Wine) {
-  return w.maker && !w.original.includes(w.maker) ? `${w.maker} ${w.original}` : w.original;
+  if (!w.maker || w.original.includes(w.maker)) return w.original;
+  const own = w.maker.split(/\s+/).filter((x) => x.length >= 3 && !MAKER_GENERIC.test(x));
+  const lower = w.original.toLowerCase();
+  if (own.length && own.some((x) => lower.includes(x.toLowerCase()))) return w.original;
+  return `${w.maker} ${w.original}`;
 }
 
 /** 화면에 보일 와인 이름 */

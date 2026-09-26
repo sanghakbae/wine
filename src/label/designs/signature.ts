@@ -808,7 +808,8 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.text("Reserva", p.W / 2, p.H * 0.66, { font: "script", size: 80, color: "#c9a24e", foil: "gold" });
       p.text("CABERNET SAUVIGNON", p.W / 2, p.H * 0.75, { font: "roman", size: 38, color: "#f2e6c8", spacing: 0.15, kind: "info", maxWidth: 860 });
       p.text(V(p), p.W / 2, p.H * 0.83, { font: "didone", size: 44, color: "#c9a24e", foil: "gold" });
-      p.text("CONCHA Y TORO · CHILE", p.W / 2, p.H * 0.91, { font: "roman", size: 26, color: "#bbb", spacing: 0.2, kind: "info" });
+      p.text("CONCHA Y TORO", p.W / 2, p.H * 0.9, { font: "roman", size: 26, color: "#bbb", spacing: 0.2, kind: "name" });
+      p.text("CHILE", p.W / 2, p.H * 0.95, { font: "roman", size: 20, color: "#bbb", spacing: 0.3, kind: "info" });
     },
   },
   montes: {
@@ -846,7 +847,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.text("POMEROL", p.W / 2, p.H * 0.7, { font: "roman", size: 58, color: "#1b1410", spacing: 0.3, kind: "info" });
       p.text("GRAND VIN", p.W / 2, p.H * 0.78, { font: "roman", size: 32, color: "#b0181f", spacing: 0.3 });
       p.text(V(p), p.W / 2, p.H * 0.86, { font: "didone", size: 56, weight: 700, color: "#1b1410" });
-      p.text("MIS EN BOUTEILLE AU CHÂTEAU", p.W / 2, p.H * 0.93, { font: "roman", size: 20, color: "#1b1410", spacing: 0.15 });
+      p.text("MIS EN BOUTEILLE AU CHÂTEAU", p.W / 2, p.H * 0.93, { font: "roman", size: 20, color: "#1b1410", spacing: 0.15, kind: "info" });
     },
   },
   opusone: {
@@ -903,7 +904,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.text("Dom Pérignon", p.W / 2, p.H * 0.44, { font: "didone", size: 118, italic: true, color: "#1b1a17", kind: "name", maxWidth: 880 });
       p.text(p.vintage ? `VINTAGE ${p.vintage}` : "VINTAGE", p.W / 2, p.H * 0.58, { font: "roman", size: 40, color: "#1b1a17", spacing: 0.2 });
       p.text("CHAMPAGNE · BRUT", p.W / 2, p.H * 0.68, { font: "roman", size: 30, color: "#1b1a17", spacing: 0.25, kind: "info" });
-      p.text("MOËT ET CHANDON À ÉPERNAY", p.W / 2, p.H * 0.78, { font: "roman", size: 22, color: "#1b1a17", spacing: 0.1, kind: "name" });
+      p.text("MOËT ET CHANDON À ÉPERNAY", p.W / 2, p.H * 0.78, { font: "roman", size: 22, color: "#1b1a17", spacing: 0.1, kind: "both" });
       p.cutout((c) => shield(c, 12));
     },
   },
@@ -917,7 +918,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.text("Champagne", p.W / 2, p.H * 0.49, { font: "script", size: 92, color: "#141414", kind: "info" });
       p.text("IMPÉRIAL", p.W / 2, p.H * 0.64, { font: "roman", size: 60, color: "#141414", spacing: 0.3, kind: "name" });
       p.text("BRUT", p.W / 2, p.H * 0.75, { font: "roman", size: 38, color: "#a67c2e", foil: "gold", spacing: 0.3 });
-      p.text("FONDÉE EN 1743", p.W / 2, p.H * 0.86, { font: "roman", size: 24, color: "#141414", spacing: 0.25 });
+      p.text("FONDÉE EN 1743", p.W / 2, p.H * 0.86, { font: "roman", size: 24, color: "#141414", spacing: 0.25, kind: "name" });
     },
   },
   cristal: {
@@ -968,8 +969,8 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       E.star(p, p.W / 2, p.H * 0.24, 130, { color: "#1f3a5f" }, 8, 0.32);
       E.star(p, p.W / 2, p.H * 0.24, 70, { color: "#c9a24e", foil: "gold" }, 8, 0.4);
       p.text("SASSICAIA", p.W / 2, p.H * 0.47, { font: "roman", size: 108, weight: 700, color: "#1f3a5f", spacing: 0.1, kind: "name" });
-      p.text("BOLGHERI SASSICAIA", p.W / 2, p.H * 0.58, { font: "roman", size: 34, color: "#1f3a5f", spacing: 0.2, kind: "info" });
-      p.text("Denominazione di Origine Controllata", p.W / 2, p.H * 0.65, { font: "serif", size: 32, italic: true, color: "#1f3a5f" });
+      p.text("BOLGHERI SASSICAIA", p.W / 2, p.H * 0.58, { font: "roman", size: 34, color: "#1f3a5f", spacing: 0.2, kind: "both" });
+      p.text("Denominazione di Origine Controllata", p.W / 2, p.H * 0.65, { font: "serif", size: 32, italic: true, color: "#1f3a5f", kind: "info" });
       p.text(V(p), p.W / 2, p.H * 0.76, { font: "roman", size: 54, color: "#1f3a5f" });
       p.text("TENUTA SAN GUIDO", p.W / 2, p.H * 0.87, { font: "roman", size: 30, color: "#1f3a5f", spacing: 0.25, kind: "name" });
     },
@@ -998,7 +999,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.text("PREMIER GRAND CRU CLASSÉ", p.W / 2, p.H * 0.62, { font: "roman", size: 30, color: "#1b1410", spacing: 0.15 });
       p.text("APPELLATION MARGAUX CONTRÔLÉE", p.W / 2, p.H * 0.69, { font: "roman", size: 26, color: "#1b1410", spacing: 0.08, kind: "info" });
       p.text(V(p), p.W / 2, p.H * 0.8, { font: "didone", size: 66, weight: 700, color: "#1b1410" });
-      p.text("MIS EN BOUTEILLE AU CHÂTEAU", p.W / 2, p.H * 0.91, { font: "roman", size: 20, color: "#1b1410", spacing: 0.15 });
+      p.text("MIS EN BOUTEILLE AU CHÂTEAU", p.W / 2, p.H * 0.91, { font: "roman", size: 20, color: "#1b1410", spacing: 0.15, kind: "info" });
     },
   },
   latour: {
@@ -1023,7 +1024,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.text("Lafite Rothschild", p.W / 2, p.H * 0.56, { font: "serif", size: 104, italic: true, weight: 600, color: "#1b1410", kind: "name", maxWidth: 880 });
       p.text(V(p), p.W / 2, p.H * 0.68, { font: "serif", size: 72, weight: 600, color: "#1b1410" });
       p.text("PAUILLAC", p.W / 2, p.H * 0.78, { font: "roman", size: 44, color: "#1b1410", spacing: 0.3, kind: "info" });
-      p.text("Mis en bouteille au château", p.W / 2, p.H * 0.88, { font: "serif", size: 32, italic: true, color: "#1b1410" });
+      p.text("Mis en bouteille au château", p.W / 2, p.H * 0.88, { font: "serif", size: 32, italic: true, color: "#1b1410", kind: "info" });
     },
   },
   hautbrion: {
@@ -1035,7 +1036,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.text("HAUT-BRION", p.W / 2, p.H * 0.57, { font: "roman", size: 104, weight: 700, color: "#1b1410", kind: "name" });
       p.text("PESSAC-LÉOGNAN", p.W / 2, p.H * 0.67, { font: "roman", size: 34, color: "#8e1520", spacing: 0.2, kind: "info" });
       p.text(V(p), p.W / 2, p.H * 0.79, { font: "didone", size: 62, weight: 700, color: "#1b1410" });
-      p.text("MIS EN BOUTEILLE AU CHÂTEAU", p.W / 2, p.H * 0.9, { font: "roman", size: 20, color: "#1b1410", spacing: 0.15 });
+      p.text("MIS EN BOUTEILLE AU CHÂTEAU", p.W / 2, p.H * 0.9, { font: "roman", size: 20, color: "#1b1410", spacing: 0.15, kind: "info" });
     },
   },
   yquem: {
@@ -1144,7 +1145,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.text("BOURGOGNE", p.W / 2, p.H * 0.59, { font: "roman", size: 56, color: "#6b2a1a", spacing: 0.2, kind: "info" });
       p.text("Pinot Noir", p.W / 2, p.H * 0.68, { font: "serif", size: 50, italic: true, color: "#1b1410", kind: "info" });
       p.text(V(p), p.W / 2, p.H * 0.78, { font: "didone", size: 50, color: "#1b1410" });
-      p.text("MAISON FONDÉE EN 1859 · BEAUNE", p.W / 2, p.H * 0.89, { font: "roman", size: 22, color: "#1b1410", spacing: 0.12, kind: "info" });
+      p.text("MAISON FONDÉE EN 1859 · BEAUNE", p.W / 2, p.H * 0.89, { font: "roman", size: 22, color: "#1b1410", spacing: 0.12, kind: "both" });
     },
   },
   duboeuf: {
@@ -1173,7 +1174,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.frame(16, 16, p.W - 32, p.H - 32, "#8e1520", 6);
       rooster(p, p.W * 0.18, p.H * 0.5, 260, "#141414");
       p.text("CHIANTI", p.W * 0.58, p.H * 0.42, { font: "roman", size: 150, weight: 700, color: "#8e1520", spacing: 0.08, kind: "name" });
-      p.text("Denominazione di Origine Controllata e Garantita", p.W * 0.58, p.H * 0.72, { font: "serif", size: 36, italic: true, color: "#141414", maxWidth: 640 });
+      p.text("Denominazione di Origine Controllata e Garantita", p.W * 0.58, p.H * 0.72, { font: "serif", size: 36, italic: true, color: "#141414", maxWidth: 640, kind: "info" });
     },
   },
   tiopepe: {
@@ -1181,8 +1182,8 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.paper("#fbf8f0", { aged: 0.08 });
       p.frame(22, 22, p.W - 44, p.H - 44, "#b3141c", 5);
       p.text("Tio Pepe", p.W / 2, p.H * 0.3, { font: "didone", size: 170, weight: 900, italic: true, color: "#b3141c", kind: "name" });
-      p.text("FINO", p.W / 2, p.H * 0.5, { font: "roman", size: 84, weight: 700, color: "#141414", spacing: 0.3 });
-      p.text("MUY SECO", p.W / 2, p.H * 0.6, { font: "roman", size: 36, color: "#141414", spacing: 0.3 });
+      p.text("FINO", p.W / 2, p.H * 0.5, { font: "roman", size: 84, weight: 700, color: "#141414", spacing: 0.3, kind: "info" });
+      p.text("MUY SECO", p.W / 2, p.H * 0.6, { font: "roman", size: 36, color: "#141414", spacing: 0.3, kind: "info" });
       p.text("JEREZ · XÉRÈS · SHERRY", p.W / 2, p.H * 0.72, { font: "roman", size: 34, color: "#141414", spacing: 0.15, kind: "info" });
       p.text("GONZÁLEZ BYASS", p.W / 2, p.H * 0.86, { font: "roman", size: 40, color: "#b3141c", spacing: 0.2, kind: "name" });
     },
@@ -1192,7 +1193,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.paper("#f7f1e2", { aged: 0.2 });
       p.frame(24, 24, p.W - 48, p.H - 48, "#1b1410", 3);
       p.text("TAYLOR'S", p.W / 2, p.H * 0.24, { font: "roman", size: 130, weight: 700, color: "#a3161d", spacing: 0.08, kind: "name" });
-      p.text("VINTAGE PORT", p.W / 2, p.H * 0.42, { font: "roman", size: 64, color: "#1b1410", spacing: 0.15 });
+      p.text("VINTAGE PORT", p.W / 2, p.H * 0.42, { font: "roman", size: 64, color: "#1b1410", spacing: 0.15, kind: "both" });
       p.text(V(p), p.W / 2, p.H * 0.56, { font: "didone", size: 90, weight: 700, color: "#1b1410" });
       p.text("TAYLOR, FLADGATE & YEATMAN", p.W / 2, p.H * 0.72, { font: "roman", size: 32, color: "#1b1410", spacing: 0.08, kind: "name", maxWidth: 860 });
       p.text("PORTO · PRODUCT OF PORTUGAL", p.W / 2, p.H * 0.84, { font: "roman", size: 26, color: "#1b1410", spacing: 0.15, kind: "info" });
@@ -1203,7 +1204,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.paper("#f8f5ee", { aged: 0.05 });
       p.text("Penfolds", p.W / 2, p.H * 0.2, { font: "script", size: 150, color: "#b3141c", kind: "name" });
       p.text("GRANGE", p.W / 2, p.H * 0.42, { font: "roman", size: 140, weight: 700, color: "#141414", spacing: 0.15, kind: "name" });
-      p.text("BIN 95", p.W / 2, p.H * 0.55, { font: "roman", size: 40, color: "#141414", spacing: 0.3 });
+      p.text("BIN 95", p.W / 2, p.H * 0.55, { font: "roman", size: 40, color: "#141414", spacing: 0.3, kind: "name" });
       p.text("SHIRAZ", p.W / 2, p.H * 0.65, { font: "roman", size: 44, color: "#141414", spacing: 0.3, kind: "info" });
       p.text(V(p), p.W / 2, p.H * 0.76, { font: "roman", size: 54, color: "#141414" });
       p.text("SOUTH AUSTRALIA", p.W / 2, p.H * 0.88, { font: "roman", size: 26, color: "#141414", spacing: 0.25, kind: "info" });
@@ -1238,7 +1239,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       nuns(p, p.W / 2, p.H * 0.24, 230, "#f4f1e8");
       p.text("Blue Nun", p.W / 2, p.H * 0.5, { font: "script", size: 160, color: "#ffffff", kind: "name" });
       p.text("RHEINHESSEN", p.W / 2, p.H * 0.66, { font: "roman", size: 40, color: "#e8d9a8", spacing: 0.3, kind: "info" });
-      p.text("Qualitätswein", p.W / 2, p.H * 0.75, { font: "serif", size: 44, italic: true, color: "#ffffff" });
+      p.text("Qualitätswein", p.W / 2, p.H * 0.75, { font: "serif", size: 44, italic: true, color: "#ffffff", kind: "info" });
       p.text("PRODUCE OF GERMANY", p.W / 2, p.H * 0.88, { font: "roman", size: 26, color: "#e8d9a8", spacing: 0.2, kind: "info" });
     },
   },
@@ -1260,7 +1261,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
         arch(c, 22);
         c.stroke();
       }, "gold");
-      p.text("MAISON FONDÉE EN 1729", p.W / 2, p.H * 0.22, { font: "roman", size: 28, color: "#6b5430", spacing: 0.2 });
+      p.text("MAISON FONDÉE EN 1729", p.W / 2, p.H * 0.22, { font: "roman", size: 28, color: "#6b5430", spacing: 0.2, kind: "name" });
       p.text("RUINART", p.W / 2, p.H * 0.42, { font: "roman", size: 150, weight: 700, color: "#1d2b22", spacing: 0.1, kind: "name" });
       p.text("Blanc de Blancs", p.W / 2, p.H * 0.6, { font: "script", size: 110, color: "#a67c2e", foil: "gold", kind: "name" });
       p.text("CHAMPAGNE · REIMS", p.W / 2, p.H * 0.8, { font: "roman", size: 34, color: "#1d2b22", spacing: 0.25, kind: "info" });
@@ -1287,7 +1288,7 @@ export const SIGNATURE: Record<string, Partial<Design>> = {
       p.text("1ER GRAND CRU CLASSÉ", p.W / 2, p.H * 0.56, { font: "roman", size: 34, color: "#8e1520", spacing: 0.2 });
       p.text("SAINT-ÉMILION GRAND CRU", p.W / 2, p.H * 0.64, { font: "roman", size: 30, color: "#1b1410", spacing: 0.15, kind: "info" });
       p.text(V(p), p.W / 2, p.H * 0.78, { font: "didone", size: 70, weight: 700, color: "#b88f3a", foil: "gold" });
-      p.text("MIS EN BOUTEILLE AU CHÂTEAU", p.W / 2, p.H * 0.9, { font: "roman", size: 20, color: "#1b1410", spacing: 0.15 });
+      p.text("MIS EN BOUTEILLE AU CHÂTEAU", p.W / 2, p.H * 0.9, { font: "roman", size: 20, color: "#1b1410", spacing: 0.15, kind: "info" });
     },
   },
 };

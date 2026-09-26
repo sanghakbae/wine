@@ -150,9 +150,9 @@ export function styleFor(w: Wine): LabelStyle {
       variant,
     };
   } else {
-    // 그 밖의 나라: 프랑스식 원산지 문구가 찍히지 않는 레이아웃만 쓴다
+    // 그 밖의 나라: 특정 나라의 원산지 문구(프랑스·스페인식)가 찍히지 않는 레이아웃만 쓴다
     s = {
-      layout: pick(r, ["modern", "iberian", "dark", "minimal"] as Layout[]),
+      layout: pick(r, ["modern", "dark", "minimal"] as Layout[]),
       paper: pick(r, PAPERS_CREAM),
       ink: pick(r, INKS),
       accent: pick(r, ["#8e1520", "#1a2330", "#9c7428"]),
@@ -255,11 +255,12 @@ export function templateFront(w: Wine): (p: Painter) => void {
         }
         p.text(nameFont === "script" ? main : main.toUpperCase(), cx, y, { font: nameFont, size: nameFont === "script" ? 110 : 76, weight: 700, color: ink, maxWidth: 860, kind: "name", foil: st.variant % 4 === 0 ? inkFoil ?? undefined : undefined });
         y += H * 0.085;
-        p.text(cls ?? "GRAND VIN DE BORDEAUX", cx, y, { font: "roman", size: 26, color: st.accent, spacing: 0.12, maxWidth: 800, kind: "deco" });
+        // 등급·퀴베명(cls)은 이름·산지 둘 다의 단서라 어느 쪽을 가려도 가리고, 기본 문구는 산지(보르도) 단서라 산지와 함께 가린다
+        p.text(cls ?? "GRAND VIN DE BORDEAUX", cx, y, { font: "roman", size: 26, color: st.accent, spacing: 0.12, maxWidth: 800, kind: cls ? "both" : "info" });
         y += H * 0.065;
         p.text(`APPELLATION ${region.toUpperCase()} CONTRÔLÉE`, cx, y, { font: "roman", size: 23, color: ink, spacing: 0.08, maxWidth: 840, kind: "info" });
         p.text(vintage, cx, H * 0.86, { font: "didone", size: 66, weight: 700, color: ink, foil: inkFoil ?? undefined, kind: "deco" });
-        p.text("MIS EN BOUTEILLE AU CHÂTEAU", cx, H * 0.935, { font: "roman", size: 19, color: ink, spacing: 0.15, kind: "deco" });
+        p.text("MIS EN BOUTEILLE AU CHÂTEAU", cx, H * 0.935, { font: "roman", size: 19, color: ink, spacing: 0.15, kind: "info" });
         break;
       }
       case "burgundy": {
@@ -273,7 +274,7 @@ export function templateFront(w: Wine): (p: Painter) => void {
         y = H * 0.46;
         p.text(nameFont === "script" || nameFont === "gothic" ? main : main.toUpperCase(), cx, y, { font: nameFont, size: nameFont === "script" ? 120 : 92, weight: 700, color: ink, maxWidth: 880, kind: "name" });
         y += H * 0.1;
-        if (cls) p.text(cls.toUpperCase(), cx, y, { font: "roman", size: 34, color: st.accent, spacing: 0.25, kind: "deco" });
+        if (cls) p.text(cls.toUpperCase(), cx, y, { font: "roman", size: 34, color: st.accent, spacing: 0.25, kind: "both" });
         y += H * 0.08;
         p.text(`Appellation ${region} Contrôlée`, cx, y, { font: "serif", size: 34, italic: true, color: ink, maxWidth: 860, kind: "info" });
         p.text(vintage, cx, H * 0.78, { font: "didone", size: 56, color: ink, kind: "deco" });
@@ -297,7 +298,7 @@ export function templateFront(w: Wine): (p: Painter) => void {
         drawEmblem(p, { ...st, foil: inkFoil ?? "gold" }, w, cx, H * 0.2, 150, txt);
         p.text(isChampagne ? "CHAMPAGNE" : region.toUpperCase(), cx, H * 0.36, { font: "roman", size: 38, color: txt, spacing: 0.35, kind: "info", foil: inkFoil ?? undefined, maxWidth: 760 });
         p.text(main, cx, H * 0.53, { font: nameFont, size: nameFont === "script" ? 130 : 84, weight: 700, color: txt, maxWidth: 800, kind: "name", foil: inkFoil ?? undefined });
-        p.text(cls ?? "BRUT", cx, H * 0.69, { font: "roman", size: 40, color: txt, spacing: 0.3, kind: "deco" });
+        p.text(cls ?? "BRUT", cx, H * 0.69, { font: "roman", size: 40, color: txt, spacing: 0.3, kind: cls ? "both" : "info" });
         p.text(isChampagne ? `${region.toUpperCase()} — FRANCE` : country.toUpperCase(), cx, H * 0.8, { font: "roman", size: 22, color: txt, spacing: 0.2, maxWidth: 700, kind: "info" });
         p.cutout((c) => cutPath(c, cut, W, H, 0));
         break;
@@ -311,7 +312,7 @@ export function templateFront(w: Wine): (p: Painter) => void {
         p.text(`${grape}${cls ? " " + cls : ""}`, cx, H * 0.61, { font: "serif", size: 46, italic: true, color: st.accent, maxWidth: 860, kind: "info" });
         p.text(region, cx, H * 0.71, { font: "roman", size: 34, color: ink, spacing: 0.25, kind: "info" });
         p.text(vintage, cx, H * 0.81, { font: "didone", size: 52, color: ink, kind: "deco" });
-        p.text("Gutsabfüllung · Qualitätswein", cx, H * 0.91, { font: "serif", size: 26, color: ink, kind: "deco" });
+        p.text("Gutsabfüllung · Qualitätswein", cx, H * 0.91, { font: "serif", size: 26, color: ink, kind: "info" });
         break;
       }
       case "italian": {
@@ -321,7 +322,7 @@ export function templateFront(w: Wine): (p: Painter) => void {
         drawEmblem(p, st, w, cx, H * 0.2, 170, st.accent);
         p.text(nameFont === "script" ? main : main.toUpperCase(), cx, H * 0.42, { font: nameFont, size: nameFont === "script" ? 124 : 84, weight: 700, color: ink, maxWidth: 860, kind: "name", foil: st.variant % 3 === 0 ? inkFoil ?? undefined : undefined });
         p.text(region.toUpperCase(), cx, H * 0.56, { font: "roman", size: 44, color: st.accent, spacing: 0.2, maxWidth: 820, kind: "info" });
-        p.text(cls ?? "Denominazione di Origine Controllata", cx, H * 0.64, { font: "serif", size: 28, italic: true, color: ink, maxWidth: 820, kind: "deco" });
+        p.text(cls ?? "Denominazione di Origine Controllata", cx, H * 0.64, { font: "serif", size: 28, italic: true, color: ink, maxWidth: 820, kind: cls ? "both" : "info" });
         p.text(vintage, cx, H * 0.75, { font: "didone", size: 54, color: ink, kind: "deco" });
         if (maker) p.text(maker, cx, H * 0.85, { font: "serif", size: 34, color: ink, maxWidth: 820, kind: "name" });
         p.text(country, cx, H * 0.925, { font: "roman", size: 20, color: ink, spacing: 0.2, kind: "info" });
@@ -334,7 +335,7 @@ export function templateFront(w: Wine): (p: Painter) => void {
         p.frame(40, H * 0.09, W - 80, H * 0.82, ink, 1.5, inkFoil);
         drawEmblem(p, st, w, cx, H * 0.24, 170, ink);
         p.text(nameFont === "script" ? main : main.toUpperCase(), cx, H * 0.45, { font: nameFont, size: nameFont === "script" ? 116 : 74, weight: 700, color: ink, maxWidth: 850, kind: "name" });
-        p.text((cls ?? "RESERVA").toUpperCase(), cx, H * 0.56, { font: "roman", size: 40, color: st.accent, spacing: 0.3, maxWidth: 800, kind: "deco", foil: inkFoil ?? undefined });
+        p.text((cls ?? "RESERVA").toUpperCase(), cx, H * 0.56, { font: "roman", size: 40, color: st.accent, spacing: 0.3, maxWidth: 800, kind: cls ? "both" : "info", foil: inkFoil ?? undefined });
         p.text(`Denominación de Origen ${region}`, cx, H * 0.65, { font: "serif", size: 32, italic: true, color: ink, maxWidth: 820, kind: "info" });
         p.text(vintage, cx, H * 0.76, { font: "didone", size: 54, color: ink, kind: "deco" });
         p.text(country, cx, H * 0.86, { font: "roman", size: 22, color: ink, spacing: 0.2, kind: "info" });
@@ -345,7 +346,8 @@ export function templateFront(w: Wine): (p: Painter) => void {
         p.frame(26, 26, W - 52, H - 52, st.accent, 6);
         drawEmblem(p, st, w, cx, H * 0.17, 140, st.accent);
         p.text(main.toUpperCase(), cx, H * 0.36, { font: nameFont, size: 88, weight: 700, color: st.accent, maxWidth: 860, kind: "name" });
-        p.text((cls ?? (w.area === "도루" ? "VINTAGE PORT" : "FINO")).toUpperCase(), cx, H * 0.52, { font: "roman", size: 50, color: ink, spacing: 0.2, maxWidth: 820, kind: "deco", foil: inkFoil ?? undefined });
+        // 스타일(빈티지·토니·피노…)은 와인마다 적힌 cls 만 쓴다 (짐작한 기본값이 토니 포트에 VINTAGE PORT 처럼 틀린 단서가 됐다)
+        if (cls) p.text(cls.toUpperCase(), cx, H * 0.52, { font: "roman", size: 50, color: ink, spacing: 0.2, maxWidth: 820, kind: "both", foil: inkFoil ?? undefined });
         p.text(region, cx, H * 0.64, { font: "serif", size: 38, italic: true, color: ink, kind: "info" });
         if (!w.nv) p.text(vintage, cx, H * 0.76, { font: "didone", size: 54, color: ink, kind: "deco" });
         p.text(country, cx, H * 0.9, { font: "roman", size: 22, color: ink, spacing: 0.2, kind: "info" });

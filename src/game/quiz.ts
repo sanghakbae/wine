@@ -1,6 +1,7 @@
 import { FAMILIES, SHAPES, type FamilyId } from "../bottle/shapes";
 import { pickVintage } from "../data/vintage";
 import { WINES, type Trivia, type Wine, type WineType } from "../data/wines";
+import { GRAPE_EN, REGION_EN } from "../data/lang";
 import type { Hide } from "../label/painter";
 import { SIGNATURE } from "../label/designs/signature";
 import { countryName, familyName, hasProducer, grapeName, initialOf, producerOf, quizOf, regionName, t, typeName, wineName, wineSub, type UIKey } from "../i18n";
@@ -121,6 +122,86 @@ function alsoTrue(w: Wine): WineType[] {
   return w.type === "fortified" ? [color, "sweet"] : [color];
 }
 
+// ── 라벨에 보이는 이름이 답을 드러내는지
+// 이름을 묻지 않는 문제는 라벨의 이름을 보여 주므로, 이름에 산지·품종이 들어 있으면 그 문제는 답이 보인다
+// (예: "Robert Mondavi Napa Valley Cabernet Sauvignon" 의 산지, "Montes Alpha Syrah" 의 품종).
+const fold = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+/** 라벨에 적히거나 보기·해설에 뜨는 이름 전부 (원어 이름·라벨 이름·생산자) */
+const labelText = (w: Wine) => fold(`${w.original} ${w.labelName ?? ""} ${w.maker ?? ""}`);
+function hasWord(hay: string, word: string) {
+  const k = fold(word).trim();
+  if (k.length < 3) return false;
+  const esc = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^a-z0-9])${esc}($|[^a-z0-9])`).test(hay);
+}
+/** 같은 품종의 다른 이름 (라벨에는 나라마다 다르게 적힌다) */
+const GRAPE_ALIAS: Record<string, string[]> = {
+  syrah: ["shiraz"],
+  shiraz: ["syrah"],
+  grenache: ["garnacha", "cannonau"],
+  garnacha: ["grenache"],
+  zinfandel: ["primitivo"],
+  primitivo: ["zinfandel"],
+  "pinot gris": ["pinot grigio"],
+  "pinot grigio": ["pinot gris"],
+};
+/** 산지 이름(원어) → 그 산지가 있는 나라. 와인 이름에 같은 나라의 다른 산지가 들어 있어도 나라·산지의 단서가 된다 (La Marca Prosecco) */
+let PLACE_COUNTRY: Map<string, string> | null = null;
+function placeCountry() {
+  if (PLACE_COUNTRY) return PLACE_COUNTRY;
+  PLACE_COUNTRY = new Map();
+  for (const x of WINES)
+    for (const k of [x.area, x.sub]) {
+      const en = k ? REGION_EN[k] : "";
+      if (en && en.length >= 4) PLACE_COUNTRY.set(en, x.country);
+    }
+  for (const [word, c] of [
+    ["Port", "포르투갈"],
+    ["Porto", "포르투갈"],
+    ["Sherry", "스페인"],
+    ["Jerez", "스페인"],
+    ["Prosecco", "이탈리아"],
+    ["Chianti", "이탈리아"],
+    ["Tokaji", "헝가리"],
+  ] as const)
+    PLACE_COUNTRY.set(word, c);
+  return PLACE_COUNTRY;
+}
+
+const nameShowsCache = new Map<string, { region: boolean; grape: boolean }>();
+/** 이름에 이 와인의 산지(또는 같은 나라의 다른 산지 = 나라·산지의 단서)·품종이 적혀 있는지 */
+function nameShows(w: Wine) {
+  let r = nameShowsCache.get(w.id);
+  if (r) return r;
+  const hay = labelText(w);
+  const places = [w.sub ? REGION_EN[w.sub] : "", REGION_EN[w.area] ?? ""].filter(Boolean);
+  for (const [word, c] of placeCountry()) if (c === w.country) places.push(word);
+  const grapes = w.grape
+    .split(/[·,]/)
+    .map((g) => GRAPE_EN[g.trim().replace(/\s*(블렌드|등.*)$/, "")] ?? "")
+    .filter(Boolean)
+    .flatMap((g) => {
+      const k = fold(g);
+      // "Cabernet" 만 적혀 있어도 카베르네 소비뇽이라는 걸 안다: 긴 첫 단어도 본다
+      const first = k.split(" ")[0];
+      return [k, ...(GRAPE_ALIAS[k] ?? []), ...(first.length >= 6 && first !== k ? [first] : [])];
+    });
+  r = { region: places.some((x) => hasWord(hay, x)), grape: grapes.some((x) => hasWord(hay, x)) };
+  nameShowsCache.set(w.id, r);
+  return r;
+}
+/** 이 와인에 이 유형을 내도 답이 라벨 이름에 보이지 않는지 */
+function fair(w: Wine, q: QType) {
+  const n = nameShows(w);
+  if (q === "region" || q === "country") return !n.region;
+  if (q === "grape") return !n.grape;
+  return true;
+}
+
 /** 문제로 낼 수 있는 유형과 비중 (와인마다 다르고, 레벨이 오를수록 산지·품종·생산자·상식 문제가 늘어난다) */
 function qtypesFor(w: Wine, level: Level, adv: number): [QType, number][] {
   const easy = 1 - adv * 0.7;
@@ -134,7 +215,7 @@ function qtypesFor(w: Wine, level: Level, adv: number): [QType, number][] {
   if (w.producerQ && hasProducer(w)) out.push(["producer", 0.2 + adv * 1.8]);
   if (SHAPES[w.shape].family) out.push(["shape", 0.5 + adv * 0.5]);
   if (quizOf(w).length) out.push(["trivia", 0.5 + adv * 3]);
-  return out;
+  return out.filter(([q]) => fair(w, q));
 }
 
 function pickWeighted<T>(items: [T, number][]): T {
@@ -182,7 +263,7 @@ function similarity(a: Wine, b: Wine): number {
   return s + Math.random() * 2.5;
 }
 
-function distractors(w: Wine, q: QType, level: Level, n: number, similar: number): Option[] {
+function distractors(w: Wine, q: QType, n: number, similar: number, tiers: number[]): Option[] {
   const correct = valueOf(w, q);
   // 생산자 보기는 생산자 이름이 있는 와인에서만 (없으면 producerOf 가 와인 이름을 돌려줘 티가 난다)
   const pool = WINES.filter((x) => x.id !== w.id && (q !== "producer" || hasProducer(x)));
@@ -218,17 +299,22 @@ function distractors(w: Wine, q: QType, level: Level, n: number, similar: number
             .slice(0, Math.round(400 - 370 * similar))
             .map((o) => o.x),
         );
-  const tierOk = (x: Wine) => LEVELS[level].tiers.includes(x.tier);
+  const tierOk = (x: Wine) => tiers.includes(x.tier);
   for (const x of ranked) if (tierOk(x)) push(valueOf(x, q), q === "name" ? wineSub(x) : undefined);
   for (const x of shuffle(pool)) push(valueOf(x, q), q === "name" ? wineSub(x) : undefined);
   return out;
 }
 
+const BY_ID = new Map(WINES.map((w) => [w.id, w]));
+
 function pickWine(weight: Tiers, used: Set<string>): Wine {
   // 등급별 비중에 맞춰 뽑는다 (등급마다 와인 수가 달라도 비중이 유지되게 등급 수로 나눈다)
   const count: Record<number, number> = { 1: 0, 2: 0, 3: 0 };
   for (const w of WINES) count[w.tier]++;
-  const pool = WINES.filter((w) => weight[w.tier] > 0 && !used.has(w.id));
+  // 한 판에 같은 생산자가 몰리지 않게 (몬테스만 네 병 같은 판) 이미 나온 생산자는 빼고 뽑는다
+  const makers = new Set([...used].map((id) => BY_ID.get(id)?.producer));
+  const fresh = WINES.filter((w) => weight[w.tier] > 0 && !used.has(w.id) && !makers.has(w.producer));
+  const pool = fresh.length ? fresh : WINES.filter((w) => weight[w.tier] > 0 && !used.has(w.id));
   const wOf = (w: Wine) => weight[w.tier] / Math.max(1, count[w.tier]);
   let total = 0;
   for (const w of pool) total += wOf(w);
@@ -251,7 +337,10 @@ export function makeQuestion(level: Level, stage: number, used: Set<string>, rec
   const qtype = pickWeighted(types);
   const qs = quizOf(w);
   const trivia = qtype === "trivia" ? qs[Math.floor(Math.random() * qs.length)] : undefined;
-  return buildQuestion(w, qtype, level, trivia, sp.similar);
+  // 오답 보기도 이 레벨에 자주 나오는 등급의 와인에서 (입문 초반에 낯선 와인이 오답이면 너무 쉽게 걸러진다)
+  const top = Math.max(sp.weight[1], sp.weight[2], sp.weight[3]);
+  const tiers = [1, 2, 3].filter((t) => sp.weight[t] >= top * 0.25 || t === w.tier);
+  return buildQuestion(w, qtype, level, trivia, sp.similar, tiers);
 }
 
 /** 한 와인에 대해 낼 수 있는 문제를 전부 (와인별 퀴즈) */
@@ -259,14 +348,14 @@ export function wineQuiz(w: Wine, level: Level): Question[] {
   const base: QType[] = ["name", "country", "region", "grape", "type"];
   if (w.producerQ && hasProducer(w)) base.push("producer");
   if (SHAPES[w.shape].family) base.push("shape");
-  const qs = base.map((q) => buildQuestion(w, q, level));
+  const qs = base.filter((q) => fair(w, q)).map((q) => buildQuestion(w, q, level));
   for (const tr of quizOf(w)) qs.push(buildQuestion(w, "trivia", level, tr));
   // 이름 문제는 맨 앞, 나머지는 섞는다
   return [qs[0], ...shuffle(qs.slice(1))];
 }
 
 /** similar: 오답 보기를 얼마나 비슷한 와인에서 뽑을지 (기본값은 단계 중간 레벨 수준) */
-export function buildQuestion(w: Wine, qtype: QType, level: Level, trivia?: Trivia, similar = spec(level, 5).similar): Question {
+export function buildQuestion(w: Wine, qtype: QType, level: Level, trivia?: Trivia, similar = spec(level, 5).similar, tiers = LEVELS[level].tiers): Question {
   const L = LEVELS[level];
   let options: Option[];
   let correct: Option;
@@ -275,7 +364,7 @@ export function buildQuestion(w: Wine, qtype: QType, level: Level, trivia?: Triv
     options = shuffle([correct, ...trivia.x.map((label) => ({ label }))]);
   } else {
     correct = { label: valueOf(w, qtype), sub: qtype === "name" ? wineSub(w) : undefined };
-    options = shuffle([correct, ...distractors(w, qtype, level, L.options - 1, similar)]);
+    options = shuffle([correct, ...distractors(w, qtype, L.options - 1, similar, tiers)]);
   }
   const answer = options.indexOf(correct);
 
@@ -283,7 +372,8 @@ export function buildQuestion(w: Wine, qtype: QType, level: Level, trivia?: Triv
   // 소믈리에 난이도에서는 라벨 그림만으로 알아볼 수 있는 전용 라벨 와인에 한해 산지 글자까지 가린다.
   // 나머지 문제는 이름을 보여 주고 답이 되는 산지·품종 글자를 가린다.
   const asksName = qtype === "name" || qtype === "producer";
-  const hide: Hide = asksName ? { name: true, info: level === "hard" && w.id in SIGNATURE } : { name: false, info: true };
+  // 산지 이름이 곧 와인 이름인 경우(예: "Pascal Jolivet Sancerre" 의 Appellation Sancerre)는 산지 글자도 함께 가린다
+  const hide: Hide = asksName ? { name: true, info: (level === "hard" && w.id in SIGNATURE) || nameShows(w).region } : { name: false, info: true };
 
   const hints: HintKey[] = [];
   // 첫 글자 힌트는 와인 이름의 첫 글자라 이름 문제에만 (생산자 문제에서는 엉뚱한 글자이고 이름까지 드러낸다)

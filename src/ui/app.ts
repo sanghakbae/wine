@@ -730,7 +730,7 @@ export class App {
       <div class="res-head">
         ${stageLine}
         <div class="big">${this.score.toLocaleString(lang())}<small>${t("ptsUnit")}</small></div>
-        <div>${t("resCorrect", { a: right, b: this.results.length })}${this.isBest ? ` · <span class="best">${t("resBest")}</span>` : ""}</div>
+        <div>${t("resCorrect", { a: right, b: this.results.length })}${this.isBest && (!sr || sr.cleared) ? ` · <span class="best">${t("resBest")}</span>` : ""}</div>
         <div class="grade">${grade(right / this.results.length)}</div>
       </div>
       ${rankBlock}

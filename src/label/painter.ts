@@ -3,7 +3,8 @@
 // 컬러 캔버스와 별개로 금속·거칠기 캔버스(mr)를 함께 칠해서 금박 글씨가 실제로 반짝이게 한다.
 //   mr 캔버스: G = 거칠기, B = 금속도 (three.js roughnessMap / metalnessMap 규약)
 
-export type TextKind = "name" | "info" | "deco";
+/** name: 와인·생산자 이름, info: 산지·품종·나라, both: 둘 다의 단서(퀴베명·등급), deco: 늘 보이는 장식 */
+export type TextKind = "name" | "info" | "both" | "deco";
 export type FontKey = "roman" | "serif" | "didone" | "script" | "sans" | "gothic" | "grotesk";
 export type Foil = "gold" | "silver" | "copper" | "red" | "pewter";
 
@@ -282,10 +283,14 @@ export class Painter {
     return w - sp;
   }
 
+  /** 이 종류의 글자를 지금 가려야 하는지. both 는 이름·산지 어느 쪽을 가려도 함께 가린다 (퀴베명·등급처럼 둘 다의 단서) */
+  private hidden(kind: TextKind = "deco") {
+    return ((kind === "name" || kind === "both") && this.hide.name) || ((kind === "info" || kind === "both") && this.hide.info);
+  }
+
   /** 글자 한 줄. kind 가 가려지는 종류면 뿌옇게 번진 덩어리로 그린다. */
   text(str: string, x: number, y: number, o: TextOpts) {
-    const kind = o.kind ?? "deco";
-    const hidden = (kind === "name" && this.hide.name) || (kind === "info" && this.hide.info);
+    const hidden = this.hidden(o.kind);
     const c = this.ctx;
     c.save();
     c.font = this.fontCss(o);
@@ -373,8 +378,7 @@ export class Painter {
 
   /** 원호를 따라 휘어진 글자 (메달·인장) */
   arcText(str: string, cx: number, cy: number, radius: number, o: TextOpts & { start?: number; bottom?: boolean }) {
-    const kind = o.kind ?? "deco";
-    const hidden = (kind === "name" && this.hide.name) || (kind === "info" && this.hide.info);
+    const hidden = this.hidden(o.kind);
     this.draw((c, ink) => {
       c.font = this.fontCss(o);
       c.textAlign = "center";
