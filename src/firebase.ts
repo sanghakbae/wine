@@ -17,8 +17,10 @@ export const hasFirebase = !!firebaseConfig.apiKey && !!firebaseConfig.projectId
 /** 개발 서버·사설망 주소 (여기서는 통계·랭킹을 오염시키지 않는다) */
 export const isLocal =
   import.meta.env.DEV ||
-  /^(localhost|127\.|0\.0\.0\.0|\[::1\]|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname) ||
-  /\.(local|localhost)$/.test(location.hostname);
+  // iOS 앱의 주소도 localhost 지만 실제 사용자다 (IS_IOS 는 빌드 모드로 정해진다)
+  (import.meta.env.MODE !== "ios" &&
+    (/^(localhost|127\.|0\.0\.0\.0|\[::1\]|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname) ||
+      /\.(local|localhost)$/.test(location.hostname)));
 
 let appPromise: Promise<FirebaseApp> | null = null;
 

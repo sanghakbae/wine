@@ -26,12 +26,12 @@ function snapshot(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: "./",
   plugins: [
     snapshot(),
-    // 홈 화면 설치 + 오프라인. 개발 서버에서는 꺼져 있다.
-    VitePWA({
+    // 홈 화면 설치 + 오프라인. 개발 서버에서는 꺼져 있고, iOS 앱(capacitor://)은 서비스 워커를 못 써서 넣지 않는다.
+    mode !== "ios" && VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
       includeAssets: ["favicon-32.png", "apple-touch-icon.png", "icon.svg"],
@@ -96,4 +96,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

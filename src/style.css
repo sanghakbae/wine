@@ -20,12 +20,12 @@ body { background: var(--bg); -webkit-font-smoothing: antialiased; }
 .stage-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 .stage-canvas:active { cursor: grabbing; }
 button { font: inherit; color: inherit; cursor: pointer; border: 1px solid var(--line); background: rgba(255,255,255,0.06); border-radius: 6px; padding: 4.5px 8px; }
-button:hover { background: rgba(255,255,255,0.12); }
+@media (hover: hover) { button:hover { background: rgba(255,255,255,0.12); } }
 button:disabled { opacity: 0.45; cursor: default; }
 
 /* ───────── 공통 */
 .primary { background: linear-gradient(180deg, #a3243a, #7a1628); border-color: #c24a5c; color: #fff; font-weight: 700; }
-.primary:hover { background: linear-gradient(180deg, #b82c43, #8a1a2e); }
+@media (hover: hover) { .primary:hover { background: linear-gradient(180deg, #b82c43, #8a1a2e); } }
 .ghost { background: transparent; border-color: transparent; font-size: 18px; line-height: 1; }
 .row { display: flex; gap: 6px; flex-wrap: wrap; }
 .row .primary { flex: 1 1 auto; }
@@ -47,7 +47,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .streak { margin-right: 4px; color: #ffb35c; font-size: 12px; font-weight: 700; }
 
 /* ───────── 아래 패널 (넓은 화면에서는 오른쪽 기둥) */
-.panel { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; max-height: 62vh; overflow-y: auto; overflow-x: hidden; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; display: flex; flex-direction: column; gap: 10px; }
+.panel { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; max-height: 62vh; overflow-y: auto; overflow-x: hidden; padding: 12px 14px max(10px, calc(env(safe-area-inset-bottom) - 12px)); /* 아이폰 홈 표시줄 칸(34pt)을 다 비우면 아래가 휑하다: 표시줄과 겹치지 않을 만큼만 */ background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; display: flex; flex-direction: column; gap: 10px; }
 /* 넓은 화면·가로로 눕힌 폰: 패널을 오른쪽 기둥으로 (app.ts 의 SIDE_QUERY 와 같아야 한다) */
 @media (min-width: 900px), (orientation: landscape) and (max-height: 520px) {
   .panel { left: auto; top: 50%; bottom: auto; right: max(16px, env(safe-area-inset-right)); width: 400px; max-height: calc(100% - 32px); transform: translateY(-50%); border: 1px solid var(--line); border-radius: 14px; padding-bottom: 12px; }
@@ -239,9 +239,9 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
   .panel.landing { left: 50%; right: auto; top: auto; bottom: 16px; width: min(480px, calc(100% - 32px)); transform: translateX(-50%); max-height: calc(100% - 32px); border: 1px solid rgba(217,181,106,0.35); border-radius: 14px; }
 }
 .cta { width: 100%; font-size: 16px; letter-spacing: 0.08em; border: 1px solid rgba(217,181,106,0.65); background: linear-gradient(180deg, #a02640, #6b1224); box-shadow: 0 6px 18px rgba(120,20,40,0.35), inset 0 1px 0 rgba(255,255,255,0.14); }
-.cta:hover { background: linear-gradient(180deg, #b12c48, #7a1629); }
+@media (hover: hover) { .cta:hover { background: linear-gradient(180deg, #b12c48, #7a1629); } }
 .gbtn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: #fff; color: #1f1f1f; border: 1px solid #dadce0; font-weight: 600; font-size: 14px; }
-.gbtn:hover { background: #f2f2f2; }
+@media (hover: hover) { .gbtn:hover { background: #f2f2f2; } }
 .save-note { margin: 0; text-align: center; font-size: 11px; color: var(--muted); }
 .me { display: flex; align-items: center; gap: 8px; padding: 4.5px 8px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,0.04); }
 .me img { width: 26px; height: 26px; border-radius: 50%; flex: none; }
@@ -309,7 +309,7 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 .hints { gap: 6px; padding: 6px 8px; border: 1px dashed rgba(217,181,106,0.5); border-radius: 6px; background: rgba(217,181,106,0.07); color: var(--text); font-size: 13px; }
 .hints-title { color: var(--gold); font-weight: 700; white-space: nowrap; }
 .hint { font-size: 13px; font-weight: 600; color: var(--text); border: 1px solid rgba(217,181,106,0.55); background: rgba(255,255,255,0.07); border-radius: 4px; padding: 3px 6.5px; }
-.hint:hover:not(:disabled) { background: rgba(217,181,106,0.18); }
+@media (hover: hover) { .hint:hover:not(:disabled) { background: rgba(217,181,106,0.18); } }
 .hint.used { border: 1px solid var(--gold); background: rgba(217,181,106,0.2); color: var(--text); font-weight: 500; }
 .hint.used b { color: #f3d98a; }
 @media (min-width: 1200px) { .hints, .hint, .hint.used { font-size: 14px; } }
@@ -331,7 +331,7 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 
 /* Google 로그인 버튼: 구글 가이드 다크 테마 (배경 #131314, 테두리 #8E918F, 글자 #E3E3E3) */
 .gbtn { background: #131314; color: #e3e3e3; border: 1px solid #8e918f; border-radius: 4px; font-family: "Roboto", "Pretendard", -apple-system, "Apple SD Gothic Neo", sans-serif; font-weight: 500; letter-spacing: 0.01em; }
-.gbtn:hover { background: #1f1f20; border-color: #a8aaa8; }
+@media (hover: hover) { .gbtn:hover { background: #1f1f20; border-color: #a8aaa8; } }
 .gbtn svg { flex: none; }
 
 /* ───────── 게임 중 왼쪽 위 랭킹: 화면 크기에 비례한다
@@ -341,7 +341,7 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 .lr-head { display: flex; align-items: center; gap: 0.4em; width: 100%; padding: 0.1em 0.2em; border: 0; border-radius: 4px; background: none; color: var(--gold); font-size: 1em; font-weight: 700; text-align: left; }
 .lr-head span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lr-head i { font-style: normal; color: var(--muted); font-size: 0.95em; }
-.lr-head:hover { background: rgba(255,255,255,0.06); }
+@media (hover: hover) { .lr-head:hover { background: rgba(255,255,255,0.06); } }
 .live-rank ol { list-style: none; margin: 0.2em 0 0; padding: 0; }
 .live-rank li { display: flex; align-items: center; gap: 0.4em; padding: 0 0.2em 0 0.3em; border-left: 2px solid transparent; font-variant-numeric: tabular-nums; }
 .live-rank li b { width: 1.4em; flex: none; text-align: right; color: var(--muted); font-weight: 500; }
@@ -387,3 +387,9 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
   .st-tile small { font-size: 12px; }
   .st-prog { font-size: 16px; }
 }
+
+/* iOS 앱: Apple·구글 로그인 버튼을 한 줄에 같은 크기로 (Apple 은 흰 버튼 — 어두운 배경용 가이드) */
+.login-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.abtn { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; background: #fff; color: #000; border: 1px solid #fff; border-radius: 4px; font-family: -apple-system, "SF Pro Text", "Apple SD Gothic Neo", sans-serif; font-weight: 600; font-size: 14px; white-space: nowrap; }
+@media (hover: hover) { .abtn:hover { background: #ececec; } }
+.login-row .gbtn { white-space: nowrap; }

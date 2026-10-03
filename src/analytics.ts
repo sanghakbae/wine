@@ -2,10 +2,12 @@
 // 광고용 저장은 모두 거부로 두고, 게임 안에서 일어난 일만 이벤트로 남긴다.
 import type { Analytics } from "firebase/analytics";
 import { firebaseApp, firebaseConfig, hasFirebase, isLocal } from "./firebase";
+import { IS_IOS } from "./platform";
 
 type Params = Record<string, string | number | boolean>;
 
-const enabled = import.meta.env.PROD && !isLocal && hasFirebase && !!firebaseConfig.measurementId;
+// iOS 앱에서는 끈다 (추적 없음으로 신고한다)
+const enabled = import.meta.env.PROD && !IS_IOS && !isLocal && hasFirebase && !!firebaseConfig.measurementId;
 
 let analytics: Analytics | null = null;
 let log: ((a: Analytics, name: string, params?: Params) => void) | null = null;

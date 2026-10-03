@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// 블라인드 보틀 Firestore 규칙 — 쓰기는 모두 Google 로그인한 사람만, 자기 문서만.
+// 블라인드 보틀 Firestore 규칙 — 쓰기는 모두 로그인(Google·Apple)한 사람만, 자기 문서만.
 //  - users/{uid}: 게임 기록 (최고 점수·레벨 진행·맞힌 와인·판 수)
 //  - ranking/{level}/entries/{uid}: 단계별 레벨 진행 랭킹 (클리어한 레벨 수·별·점수 합). 점수 합이 같거나 오를 때만 고칠 수 있다.
 //  - leaderboard/{level}/entries/{uid}: 예전(1.11 전) 10문제 판 랭킹. 더 쓰지 않지만 옛 앱이 쓰고, 탈퇴 때 지운다.
@@ -8,11 +8,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function google() {
-      return request.auth != null && request.auth.token.firebase.sign_in_provider == 'google.com';
+    function signedIn() {
+      // 웹은 Google, iOS 앱은 Apple·Google 로그인
+      return request.auth != null && request.auth.token.firebase.sign_in_provider in ['google.com', 'apple.com'];
     }
     function me(uid) {
-      return google() && request.auth.uid == uid;
+      return signedIn() && request.auth.uid == uid;
     }
 
     // 레벨 진행 한 단계: c = 레벨마다 가장 많이 맞힌 수, s = 레벨마다 최고 점수 (레벨 10개)
@@ -42,7 +43,9 @@ service cloud.firestore {
         && (!('stages' in request.resource.data) || validStages(request.resource.data.stages))
         && request.resource.data.found is list && request.resource.data.found.size() <= 5000
         && request.resource.data.plays is int && request.resource.data.plays >= 0
-        && request.resource.data.updatedAt == request.time;
+        && request.resource.data.updatedAt == request.time
+        // 옛 앱(1.11 전)이 stages 없이 통째로 덮어써 레벨 진행을 지우지 못하게
+        && (resource == null || !('stages' in resource.data) || 'stages' in request.resource.data);
     }
 
     function validEntry(d) {
@@ -86,10 +89,10 @@ service cloud.firestore {
 
     match /wineStats/{wine} {
       allow read: if true;
-      allow create: if google() && wine.size() <= 40
+      allow create: if signedIn() && wine.size() <= 40
         && request.resource.data.keys().hasOnly(['n', 'c'])
         && request.resource.data.n == 1 && request.resource.data.c in [0, 1];
-      allow update: if google()
+      allow update: if signedIn()
         && request.resource.data.keys().hasOnly(['n', 'c'])
         && request.resource.data.n == resource.data.n + 1
         && (request.resource.data.c == resource.data.c || request.resource.data.c == resource.data.c + 1);

@@ -1,3 +1,4 @@
+import { SILENT } from "../platform";
 // 배경 음악: 오디오 파일 없이 Web Audio 로 실시간 합성하는 와인 바 재즈 트리오.
 //   로즈 피아노(FM) 코드 반주 + 워킹 베이스 + 브러시 드럼 + 가끔 비브라폰 멜로디.
 // 브라우저 자동 재생 정책 때문에 첫 클릭(또는 키 입력) 뒤에 시작한다.
@@ -63,7 +64,7 @@ export class Music {
       // 저장 공간을 못 쓰면 기본값
     }
     // 개발 서버에서는 기본으로 끈다 (버튼으로 켜 볼 수는 있지만 저장하지 않는다)
-    this.on = import.meta.env.DEV ? false : saved !== "0";
+    this.on = SILENT ? false : saved !== "0";
     const first = () => this.unlock();
     document.addEventListener("pointerdown", first, { once: true, capture: true });
     document.addEventListener("keydown", first, { once: true, capture: true });
@@ -91,7 +92,7 @@ export class Music {
   toggle() {
     this.on = !this.on;
     try {
-      if (!import.meta.env.DEV) localStorage.setItem(KEY, this.on ? "1" : "0");
+      if (!SILENT) localStorage.setItem(KEY, this.on ? "1" : "0");
     } catch {
       // 무시
     }

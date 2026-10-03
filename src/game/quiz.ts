@@ -172,7 +172,17 @@ function placeCountry() {
   return PLACE_COUNTRY;
 }
 
-const nameShowsCache = new Map<string, { region: boolean; grape: boolean }>();
+/** 와인 종류를 알려 주는 이름 속 말 (종류 문제에서 이름은 보이므로 이런 말이 있으면 답이 드러난다) */
+const TYPE_WORDS: Record<WineType, string[]> = {
+  sparkling: ["brut", "champagne", "cava", "prosecco", "spumante", "sekt", "cremant", "franciacorta", "cap classique", "sparkling", "mousseux", "frizzante", "extra dry", "blanc de blancs", "blanc de noirs", "lambrusco", "asti"],
+  fortified: ["port", "porto", "sherry", "fino", "oloroso", "amontillado", "manzanilla", "madeira", "marsala", "pedro ximenez", "tawny", "colheita", "moscatel"],
+  sweet: ["tokaji", "aszu", "sauternes", "barsac", "icewine", "eiswein", "trockenbeerenauslese", "beerenauslese", "auslese", "vin santo", "late harvest", "passito", "recioto", "noble"],
+  white: ["blanc", "bianco", "blanco", "weiss", "white", "chardonnay", "sauvignon blanc", "riesling", "pinot grigio", "pinot gris", "pinot bianco", "chablis", "gruner", "albarino", "viognier", "chenin", "gewurztraminer", "silvaner", "vermentino", "soave", "verdejo", "torrontes"],
+  red: ["rouge", "rosso", "tinto", "red", "cabernet", "merlot", "pinot noir", "shiraz", "syrah", "malbec", "zinfandel", "tempranillo", "sangiovese", "nebbiolo", "barolo", "barbaresco", "chianti", "brunello", "amarone", "grenache", "carmenere", "pinotage", "primitivo"],
+  rose: ["rose", "rosato", "rosado", "blush"],
+};
+
+const nameShowsCache = new Map<string, { region: boolean; grape: boolean; type: boolean }>();
 /** 이름에 이 와인의 산지(또는 같은 나라의 다른 산지 = 나라·산지의 단서)·품종이 적혀 있는지 */
 function nameShows(w: Wine) {
   let r = nameShowsCache.get(w.id);
@@ -190,7 +200,7 @@ function nameShows(w: Wine) {
       const first = k.split(" ")[0];
       return [k, ...(GRAPE_ALIAS[k] ?? []), ...(first.length >= 6 && first !== k ? [first] : [])];
     });
-  r = { region: places.some((x) => hasWord(hay, x)), grape: grapes.some((x) => hasWord(hay, x)) };
+  r = { region: places.some((x) => hasWord(hay, x)), grape: grapes.some((x) => hasWord(hay, x)), type: (TYPE_WORDS[w.type] ?? []).some((x) => hasWord(hay, x)) };
   nameShowsCache.set(w.id, r);
   return r;
 }
@@ -199,6 +209,7 @@ function fair(w: Wine, q: QType) {
   const n = nameShows(w);
   if (q === "region" || q === "country") return !n.region;
   if (q === "grape") return !n.grape;
+  if (q === "type") return !n.type;
   return true;
 }
 

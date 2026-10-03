@@ -4,3 +4,10 @@ dist
 .snaps
 .i18n-src
 .env.local
+
+# 홍보 영상 작업물 (스크립트만 커밋)
+promo/assets/
+promo/out/
+*.blend
+*.blend1
+ios/build/

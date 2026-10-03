@@ -43,13 +43,21 @@ import { copyBanner } from "./promo";
 import { install, onInstallChange } from "./install";
 import { countryLabel, flagOf, myCountry, short3 } from "../country";
 import { updatePending } from "./update";
-import { LoginError, authReady, currentUser, deleteAccount, onUser, reauthenticate, signIn, signOut } from "../auth";
+import { LoginError, authReady, currentUser, deleteAccount, onUser, providers, reauthenticate, signIn, signOut, type Provider } from "../auth";
+import { IS_IOS } from "../platform";
 import { track } from "../analytics";
 import { cloudEnabled, deleteMyData, recordAnswer, submitRank, topRanks, wineRate, type RankEntry } from "../cloud";
 
 /** Google 로그인 버튼 — 구글 브랜드 가이드의 공식 G 로고, 다크 테마 */
 const GOOGLE_BTN = (label: string) =>
-  `<button class="gbtn" data-act="login"><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>${label}</span></button>`;
+  `<button class="gbtn" data-act="login" data-provider="google"><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>${label}</span></button>`;
+
+/** Apple 로그인 버튼 — Apple 휴먼 인터페이스 가이드의 흰 버튼(어두운 배경용), 구글 버튼과 같은 크기 */
+const APPLE_BTN = (label: string) =>
+  `<button class="abtn" data-act="login" data-provider="apple"><svg viewBox="0 0 17 20" width="15" height="18" aria-hidden="true"><path fill="currentColor" d="M14.06 10.62c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.77-3.32-1.8-1.41-.14-2.76.83-3.47.83-.72 0-1.82-.81-3-.79-1.54.02-2.96.9-3.76 2.27-1.6 2.78-.41 6.9 1.15 9.16.76 1.1 1.67 2.34 2.87 2.3 1.15-.05 1.58-.75 2.97-.75 1.39 0 1.78.75 3 .72 1.24-.02 2.02-1.12 2.78-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.43-3.67zM11.78 3.86c.63-.77 1.06-1.84.94-2.9-.91.04-2.01.61-2.67 1.37-.58.67-1.09 1.76-.95 2.8 1.01.08 2.05-.52 2.68-1.27z"/></svg><span>${label}</span></button>`;
+
+/** 로그인 버튼들 (iOS 앱은 Apple·구글, 웹은 구글) */
+const LOGIN_BTNS = () => providers.map((p) => (p === "apple" ? APPLE_BTN(t("login_apple")) : GOOGLE_BTN(t("login_google")))).join("");
 
 /** style.css 의 오른쪽 기둥 레이아웃 조건과 같아야 한다 */
 const SIDE_QUERY = "(min-width: 900px), (orientation: landscape) and (max-height: 520px)";
@@ -222,7 +230,8 @@ export class App {
     this.liveRank.hidden = true;
     this.hud.hidden = true;
     this.hero.hidden = false;
-    this.promo.hidden = false;
+    // 홍보 배너 복사는 웹에서만 (앱 웹뷰는 파일 저장·클립보드 이미지가 안 된다)
+    this.promo.hidden = IS_IOS;
     this.vignette.hidden = false;
     document.title = `${t("appName")} — Wine Quiz`;
     this.spinLanding();
@@ -322,11 +331,12 @@ export class App {
     setTimeout(() => el.remove(), 3300);
   }
 
-  /** Google 로그인. 실패하면 이유에 맞춰 알려 준다 */
-  private async login() {
+  /** 로그인 (웹은 Google, iOS 앱은 Apple·Google). 실패하면 이유에 맞춰 알려 준다 */
+  private async login(p: Provider = "google") {
+    if (this.busy) return; // 로그인 창이 떠 있는 동안 또 누르면 앞의 요청을 덮어쓴다
     this.busy = true;
     try {
-      await signIn();
+      await signIn(p);
     } catch (e) {
       const reason = e instanceof LoginError ? e.reason : "other";
       alert(t(reason === "inapp" ? "login_inapp" : reason === "popup" ? "login_popup" : "login_fail"));
@@ -431,7 +441,11 @@ export class App {
           .join("")}
       </div>
       ${
-        cloudEnabled && !user
+        cloudEnabled && !user && IS_IOS
+          ? `<button class="primary cta" data-act="start">${t("start_now")}</button>
+             <div class="login-row">${LOGIN_BTNS()}</div>
+             <p class="save-note">${t("save_note_any")}</p>`
+          : cloudEnabled && !user
           ? `<div class="start-row"><button class="primary cta" data-act="start">${t("start_now")}</button>${GOOGLE_BTN(t("login_google"))}</div>
              <p class="save-note">${t("login_save_note")}</p>`
           : `<button class="primary cta" data-act="start">${t("start_now")}</button>`
@@ -445,7 +459,7 @@ export class App {
         <button class="link" data-act="cellar">${t("cellarBtn", { a: store.foundCount, b: WINES.length })}</button>
         ${cloudEnabled ? `<button class="link" data-act="rank">🏆 ${t("rank_btn")}</button>` : ""}
         ${cloudEnabled && user ? `<button class="link danger" data-act="delete">${t("delete_account")}</button>` : ""}
-        <a class="link privacy" href="privacy.html" target="_blank" rel="noopener">${t("privacy")}</a>
+        <a class="link privacy" ${IS_IOS ? `href="#" data-act="privacy"` : `href="privacy.html" target="_blank" rel="noopener"`}>${t("privacy")}</a>
       </nav>`;
     this.panel.onclick = async (e) => {
       const el = (e.target as HTMLElement).closest<HTMLElement>("[data-level],[data-act]");
@@ -468,7 +482,11 @@ export class App {
           return install();
         case "login":
           track("login_click", { where: "landing" });
-          return this.login();
+          return this.login(el.dataset.provider as Provider);
+        case "privacy":
+          // 앱 안 웹뷰는 새 창을 못 연다: 시스템 브라우저 시트로 연다
+          e.preventDefault();
+          return import("@capacitor/browser").then(({ Browser }) => Browser.open({ url: "https://wine.sanghak.kr/privacy.html" }));
         case "logout":
           // 저장을 마치고 로그아웃할 때까지 새 버전 새로고침을 미룬다 (중간에 새로고침되면 로그인 상태로 남는다)
           this.busy = true;
@@ -565,6 +583,8 @@ export class App {
     fitLines(this.panel);
     this.panel.onclick = (e) => {
       const el = e.target as HTMLElement;
+      // iOS 는 전화·다른 앱 뒤에 오디오가 '중단됨'으로 남는다: 손가락으로 누를 때 다시 깨운다
+      this.music.unlock();
       const opt = el.closest<HTMLElement>(".opt");
       if (opt && !this.answered) return this.answer(Number(opt.dataset.i));
       const hint = el.closest<HTMLElement>("[data-hint]");
@@ -662,7 +682,9 @@ export class App {
     const game = this.gameNo;
     this.submittingGame = game;
     // 랭킹에는 이 단계의 레벨 진행 전체가 오른다 (로그인 전 손님으로 깬 레벨도 로그인하면서 합쳐져 함께 오른다)
-    const rank = await submitRank(m.level, user.name, myCountry(), store.summary(m.level), lang());
+    // 서버에 있는 다른 기기 기록과 먼저 합쳐서 올린다 (적게 센 진행으로 랭킹이 잠깐 줄지 않게)
+    await store.flush();
+    const rank = await submitRank(m.level, currentUser()?.name ?? user.name, myCountry(), store.summary(m.level), lang());
     if (this.submittingGame === game) this.submittingGame = null;
     // 등록하는 동안 미뤄 둔 새 버전: 이제 첫 화면에 가만히 있으면 새로 불러온다
     if (this.maybeReload()) return;
@@ -701,7 +723,10 @@ export class App {
     const user = currentUser();
     let rankBlock = "";
     if (cloudEnabled && m.kind === "game") {
-      if (!user) rankBlock = `<div class="rank-login">${GOOGLE_BTN(t("login_to_rank"))}<p class="save-note">${t("login_save_note")}</p></div>`;
+      if (!user)
+        rankBlock = IS_IOS
+          ? `<div class="rank-login"><div class="login-row">${LOGIN_BTNS()}</div><p class="save-note">${t("rank_login_note")}</p></div>`
+          : `<div class="rank-login">${GOOGLE_BTN(t("login_to_rank"))}<p class="save-note">${t("login_save_note")}</p></div>`;
       else if (store.summary(m.level).cleared === 0) rankBlock = `<p class="rank-msg">${t("rank_need")}</p>`;
       else if (this.submitted) rankBlock = `<p class="rank-msg">${t("rank_done", { n: this.submitted })} · <a href="#" data-act="rank">${t("rank_title")}</a></p>`;
       else if (this.submitted === 0) rankBlock = `<p class="rank-msg">${t("rank_fail")}</p>`;
@@ -757,7 +782,7 @@ export class App {
       }
       if (act === "login") {
         track("login_click", { where: "result" });
-        this.login();
+        this.login(el.closest<HTMLElement>("[data-provider]")?.dataset.provider as Provider);
         return;
       }
       if (act === "again") this.startGame(m.kind === "wine" ? { ...m, queue: wineQuiz(m.wine, m.level) } : m);
