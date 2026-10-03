@@ -393,3 +393,6 @@ button, select, label { touch-action: manipulation; -webkit-tap-highlight-color:
 .abtn { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; background: #fff; color: #000; border: 1px solid #fff; border-radius: 4px; font-family: -apple-system, "SF Pro Text", "Apple SD Gothic Neo", sans-serif; font-weight: 600; font-size: 14px; white-space: nowrap; }
 @media (hover: hover) { .abtn:hover { background: #ececec; } }
 .login-row .gbtn { white-space: nowrap; }
+
+/* 정답을 맞히면 보기 위로 떠오르는 '+점수' (fx.floatPoints) */
+.fx-pts { position: fixed; z-index: 30; pointer-events: none; opacity: 0; color: var(--gold); font-weight: 800; font-size: 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.6); white-space: nowrap; }

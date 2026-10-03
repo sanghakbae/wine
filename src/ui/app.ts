@@ -39,6 +39,7 @@ import {
 import type { Stage } from "../scene/stage";
 import type { Music } from "../audio/music";
 import { bottleIcon } from "./icon";
+import * as fx from "./fx";
 import { copyBanner } from "./promo";
 import { install, onInstallChange } from "./install";
 import { countryLabel, flagOf, myCountry, short3 } from "../country";
@@ -421,6 +422,8 @@ export class App {
     const level = store.level;
     const user = currentUser();
     const sameTitle = t("appName").toUpperCase() === "BLIND BOTTLE";
+    // 다른 화면에서 첫 화면으로 넘어올 때만 움직인다 (단계를 고르거나 로그인 상태가 바뀌어 다시 그릴 때는 가만히)
+    const enter = this.panel.className !== "panel landing";
     this.promo.setAttribute("aria-label", t("promo_btn"));
     this.promo.title = t("promo_btn");
     this.hero.innerHTML = `
@@ -468,6 +471,7 @@ export class App {
       if (el.dataset.level) {
         store.level = el.dataset.level as Level;
         this.renderLanding();
+        fx.pulse(this.panel.querySelector(".level.on"));
         return;
       }
       switch (el.dataset.act) {
@@ -503,6 +507,11 @@ export class App {
       }
     };
     this.syncInsets();
+    if (enter) {
+      fx.rise(this.hero.children, { gap: 90, y: 16 });
+      fx.rise(this.panel.querySelectorAll(".level"), { delay: 120 });
+      fx.rise(this.panel.querySelectorAll(".cta, .login-row, .start-row, .save-note, .me, .links"), { delay: 260, gap: 50 });
+    }
   }
 
   // ───────────────────────── 게임
@@ -593,12 +602,19 @@ export class App {
       if (act === "next") this.next();
     };
     this.syncInsets();
+    fx.rise(this.panel.querySelector(".qhead"), { y: 8 });
+    fx.rise(this.panel.querySelectorAll(".opt"), { delay: 60, gap: 40 });
+    fx.rise(this.panel.querySelector(".hints"), { delay: 60 + q.options.length * 40 });
   }
 
   private useHint(h: HintKey, btn: HTMLElement) {
     if (this.hintsUsed.includes(h)) return;
     this.hintsUsed.push(h);
-    btn.outerHTML = `<span class="hint used">${hintLabel(h)}: <b>${esc(hintText(this.q!.wine, h))}</b></span>`;
+    const span = document.createElement("span");
+    span.className = "hint used";
+    span.innerHTML = `${hintLabel(h)}: <b>${esc(hintText(this.q!.wine, h))}</b>`;
+    btn.replaceWith(span);
+    fx.pop(span);
   }
 
   private answer(i: number) {
@@ -606,6 +622,7 @@ export class App {
     this.answered = true;
     const correct = i === q.answer;
     const cost = LEVELS[this.mode.level].hintCost;
+    const before = this.score;
     let points = 0;
     if (correct) {
       this.streak++;
@@ -628,6 +645,13 @@ export class App {
     this.stage.setHide({ name: false, info: false });
     this.stage.faceFront();
     this.renderHud();
+    const opts = this.panel.querySelectorAll<HTMLButtonElement>(".opt");
+    fx.bounce(opts[q.answer]);
+    if (correct) {
+      fx.floatPoints(opts[i], `+${points}`);
+      fx.countUp(this.hud.querySelector(".hud-score b"), before, this.score, (n) => n.toLocaleString(lang()));
+      if (this.streak >= 2) fx.pulse(this.hud.querySelector(".streak"));
+    } else fx.shake(opts[i]);
 
     const last = this.round >= this.total;
     const after = this.panel.querySelector(".after")!;
@@ -636,6 +660,7 @@ export class App {
       ${this.detailCard(q.wine, q)}
       <button class="primary" data-act="next">${last ? t("seeResult") : t("next")}</button>`;
     this.syncInsets();
+    fx.rise(after.children, { delay: 120, gap: 70 });
     after.querySelector<HTMLButtonElement>("[data-act=next]")?.focus({ preventScroll: true });
     this.fillRates();
     // 폰에서는 패널이 길어지므로 정답·해설이 보이게 내려 준다
@@ -713,11 +738,11 @@ export class App {
     this.view = "result";
     this.hud.hidden = true;
     this.liveRank.hidden = true;
-    this.renderResult();
+    this.renderResult(true);
   }
 
   /** 결과 화면 (로그인하면 다시 그려서 랭킹 등록 폼을 보여 준다) */
-  private renderResult() {
+  private renderResult(enter = false) {
     const m = this.mode;
     const right = this.results.filter((r) => r.correct).length;
     const user = currentUser();
@@ -794,6 +819,19 @@ export class App {
     // 로그인한 상태면 이번 판을 랭킹에 자동 등록한다 (Google 이름 + 접속 국가)
     if (cloudEnabled && m.kind === "game" && user && this.submitted === null && this.submittingGame !== this.gameNo) this.autoSubmit();
     this.syncInsets();
+    if (enter) {
+      // 점수가 0 에서 굴러 올라가고, 별이 하나씩 튀어나오고, 문제 목록이 차례로 떠오른다
+      const big = this.panel.querySelector(".big");
+      if (big?.firstChild) {
+        const num = document.createElement("span");
+        big.firstChild.replaceWith(num);
+        fx.countUp(num, 0, this.score, (n) => n.toLocaleString(lang()), 900);
+      }
+      fx.rise(this.panel.querySelectorAll(".res-head > *, .rank-login, .rank-msg"), { gap: 70 });
+      fx.pop(this.panel.querySelectorAll(".st-verdict .st-stars"), { delay: 500 });
+      fx.rise([...this.panel.querySelectorAll(".res-list li")].slice(0, 12), { delay: 250, gap: 30, y: 8 });
+      fx.rise(this.panel.querySelectorAll(".row > button"), { delay: 350, gap: 50 });
+    }
   }
 
   /** 해설 카드에 와인별 정답률 채우기 */
@@ -836,7 +874,7 @@ export class App {
           (x, i) =>
             `<li class="${x.mine ? "mine" : ""}"><b class="rk">${i + 1}</b><span class="cc" role="img" title="${esc(countryLabel(x.cc))}" aria-label="${esc(countryLabel(x.cc))}">${flagOf(x.cc)}</span><span class="nk">${esc(short3(x.nick))}</span><span class="cr">Lv ${x.cleared} · ★${x.stars}</span><em>${x.pts.toLocaleString(lang())}</em></li>`,
         )
-        .join("");
+        .join("");    fx.rise(ol.querySelectorAll("li"), { gap: 30, y: 8 });
   }
 
   // ───────────────────────── 레벨 선택
@@ -879,6 +917,9 @@ export class App {
       }
     };
     this.cellar.querySelector<HTMLButtonElement>(".cta")?.focus();
+    fx.pop(this.cellar.querySelectorAll(".st-tile"), { gap: 30 });
+    const nextTile = this.cellar.querySelector(".st-tile.next");
+    setTimeout(() => nextTile?.isConnected && fx.pulse(nextTile), 650);
   }
 
   // ───────────────────────── 와인 셀러 (도감)
@@ -937,6 +978,7 @@ export class App {
       if (!mine.length) sentinel.insertAdjacentHTML("beforebegin", `<p class="cel-empty">${t("cel_empty")}</p>`);
       grid.scrollTop = 0;
       more();
+      fx.rise([...grid.children].slice(0, 24), { gap: 18, y: 8 });
     };
     draw();
     io.observe(sentinel);
@@ -983,6 +1025,7 @@ export class App {
       else if (act === "home") this.showTitle();
     };
     this.syncInsets();
+    fx.rise(this.panel.querySelectorAll(".detail > *, .row > button"), { gap: 45 });
   }
 
   private onKey(e: KeyboardEvent) {
