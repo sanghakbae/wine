@@ -2,7 +2,7 @@
 """iOS 프로젝트(ios/App)에 앱스토어용 설정을 넣는다. 여러 번 돌려도 같은 결과(멱등).
   python3 scripts/patch-ios.py [--build N]
  - 서명 팀·Apple 로그인 기능(entitlements)·개인정보 매니페스트·GoogleService-Info.plist 를 프로젝트에 넣는다
- - 홈 화면 이름: 한국어 기기는 '블라인드 보틀', 그 밖은 'Blind Bottle'
+ - 홈 화면 이름: 한국어 기기는 '와인 퀴즈', 그 밖은 'Blind Bottle'
  - 버전: package.json 의 iosVersion(스토어 버전), 빌드 번호는 --build 로
 """
 import json
@@ -77,7 +77,7 @@ open(os.path.join(APP, "PrivacyInfo.xcprivacy"), "w").write(f"""<?xml version="1
 </plist>
 """)
 
-for lang, name in (("ko", "블라인드 보틀"), ("en", "Blind Bottle")):
+for lang, name in (("ko", "와인 퀴즈"), ("en", "Blind Bottle")):
     os.makedirs(os.path.join(APP, f"{lang}.lproj"), exist_ok=True)
     open(os.path.join(APP, f"{lang}.lproj", "InfoPlist.strings"), "w").write(
         f'"CFBundleDisplayName" = "{name}";\n"CFBundleName" = "{name}";\n'

@@ -4,7 +4,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "kr.sanghak.blindbottle",
-  appName: "블라인드 보틀",
+  appName: "와인 퀴즈",
   webDir: "dist",
   // 첫 화면이 뜨기 전 웹뷰 바탕 — 게임 배경색과 같게
   backgroundColor: "#120d0c",
