@@ -33,24 +33,24 @@ open(os.path.join(APP, "App.entitlements"), "w").write("""<?xml version="1.0" en
 </plist>
 """)
 
-def collected(kind):
+def collected(kind, linked=True, purpose="AppFunctionality"):
     return f"""		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>{kind}</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
-			<true/>
+			<{"true" if linked else "false"}/>
 			<key>NSPrivacyCollectedDataTypeTracking</key>
 			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
-				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+				<string>NSPrivacyCollectedDataTypePurpose{purpose}</string>
 			</array>
 		</dict>
 """
 
 open(os.path.join(APP, "PrivacyInfo.xcprivacy"), "w").write(f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- 블라인드 보틀 iOS 앱: 추적·광고·분석 없음. 로그인(Apple·구글)한 사람만 이름·사용자 ID·게임 기록을 Firebase 에 저장하고
+<!-- 블라인드 보틀 iOS 앱: 추적·광고 없음. 게임 안 이벤트와 앱 인스턴스 ID 를 Google Analytics 로 보낸다(분석 용도, 신원과 연결 안 함). 로그인(Apple·구글)한 사람만 이름·사용자 ID·게임 기록을 Firebase 에 저장하고
      (앱 기능 용도, 신원과 연결) 랭킹에 이름 앞 3자와 나라를 공개한다. 로그인하지 않으면 기록은 메모리에만 있다.
      Capacitor 가 앱 설정을 UserDefaults 에 두므로 필수 사유 API 로 UserDefaults(CA92.1)를 밝힌다. -->
 <plist version="1.0">
@@ -61,7 +61,7 @@ open(os.path.join(APP, "PrivacyInfo.xcprivacy"), "w").write(f"""<?xml version="1
 	<array/>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
-{collected("NSPrivacyCollectedDataTypeEmailAddress")}{collected("NSPrivacyCollectedDataTypeName")}{collected("NSPrivacyCollectedDataTypeUserID")}{collected("NSPrivacyCollectedDataTypeGameplayContent")}	</array>
+{collected("NSPrivacyCollectedDataTypeEmailAddress")}{collected("NSPrivacyCollectedDataTypeName")}{collected("NSPrivacyCollectedDataTypeUserID")}{collected("NSPrivacyCollectedDataTypeGameplayContent")}{collected("NSPrivacyCollectedDataTypeProductInteraction", False, "Analytics")}{collected("NSPrivacyCollectedDataTypeDeviceID", False, "Analytics")}	</array>
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>
