@@ -11,3 +11,5 @@ promo/out/
 *.blend
 *.blend1
 ios/build/
+ios/App/CapApp-SPM/symlinks/
+build/

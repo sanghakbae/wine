@@ -27,8 +27,15 @@ const config: CapacitorConfig = {
       spm: {
         swiftToolsVersion: "6.1",
         // Facebook SDK 는 빼고 GoogleSignIn 만 — 추적 SDK 가 들어가면 개인정보 신고·심사가 달라진다
-        packageTraits: { "@capacitor-firebase/authentication": ["Google"] },
-        packageOptions: { "@capacitor-firebase/authentication": { symlink: true } },
+        // 애널리틱스도 광고 식별자(IDFA) 없는 구성으로 — FirebaseAnalyticsCore 만 들어가고 AdSupport 는 빠진다
+        packageTraits: {
+          "@capacitor-firebase/authentication": ["Google"],
+          "@capacitor-firebase/analytics": ["AnalyticsWithoutAdIdSupport"],
+        },
+        packageOptions: {
+          "@capacitor-firebase/authentication": { symlink: true },
+          "@capacitor-firebase/analytics": { symlink: true },
+        },
       },
     },
   },

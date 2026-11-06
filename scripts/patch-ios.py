@@ -103,6 +103,9 @@ pl("-replace", "UIStatusBarStyle", "-string", "UIStatusBarStyleLightContent")
 pl("-replace", "UIViewControllerBasedStatusBarAppearance", "-bool", "NO")
 pl("-replace", "UIRequiredDeviceCapabilities", "-json", '["arm64"]')
 pl("-replace", "UIRequiresFullScreen", "-bool", "YES")
+# 네이티브 애널리틱스: 광고 용도 동의는 처음부터 모두 끈다 (웹의 setConsent 와 같은 값)
+for key in ("AD_STORAGE", "AD_USER_DATA", "AD_PERSONALIZATION_SIGNALS"):
+    pl("-replace", f"GOOGLE_ANALYTICS_DEFAULT_ALLOW_{key}", "-bool", "NO")
 pl_try("-remove", "UISupportedInterfaceOrientations~ipad")
 
 # ── project.pbxproj
